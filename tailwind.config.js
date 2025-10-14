@@ -12,6 +12,10 @@ module.exports = {
         'evox-secondary': '#00E0FF',
         'evox-gray': '#1A1A1A',
         'evox-border': '#333333',
+        'evox-timer-active': '#87CEEB',
+        'evox-timer-pause': '#F5F5DC',
+        'evox-button-primary': '#87CEEB',
+        'evox-button-secondary': '#6B7280',
       }
     },
   },

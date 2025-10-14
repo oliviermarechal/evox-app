@@ -1,89 +1,49 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import WheelPicker from '@/components/WheelPicker';
 
-interface ForTimeConfig {
+interface AMRAPConfig {
   minutes: number;
   seconds: number;
 }
 
-interface ConfigComponentProps {
-  onStartCountdown: (config: ForTimeConfig) => void;
+interface PortraitConfigProps {
+  onStartCountdown: (config: AMRAPConfig) => void;
   initialMinutes?: number;
   initialSeconds?: number;
+  selectedIndex: number;
+  onTimeChange: (index: number) => void;
+  timeIntervals: string[];
 }
 
-const generateTimeIntervals = () => {
-  const intervals = [];
-  
-  for (let seconds = 15; seconds <= 45; seconds += 15) {
-    intervals.push(`0:${seconds.toString().padStart(2, '0')}`);
-  }
-  
-  for (let minutes = 1; minutes <= 19; minutes++) {
-    for (let seconds = 0; seconds < 60; seconds += 15) {
-      intervals.push(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-    }
-  }
-  
-  intervals.push('20:00');
-  
-  return intervals;
-};
-
-const TIME_INTERVALS = generateTimeIntervals();
-
-export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, initialSeconds = 0 }: ConfigComponentProps) {
-  const getInitialIndex = useCallback(() => {
-    if (initialMinutes === 0 && initialSeconds === 0) {
-      return TIME_INTERVALS.findIndex(interval => interval === '10:00');
-    }
-    
-    const totalSeconds = initialMinutes * 60 + initialSeconds;
-    const targetInterval = Math.ceil(totalSeconds / 15) * 15;
-    
-    if (targetInterval < 15) return 0;
-    if (targetInterval > 1200) return TIME_INTERVALS.length - 1;
-    
-    const minutes = Math.floor(targetInterval / 60);
-    const seconds = targetInterval % 60;
-    const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    
-    return TIME_INTERVALS.findIndex(interval => interval === timeString);
-  }, [initialMinutes, initialSeconds]);
-
-  const [selectedIndex, setSelectedIndex] = useState(getInitialIndex());
-
-  const handleTimeChange = useCallback((index: number) => {
-    setSelectedIndex(index);
-  }, []);
-
+export default function PortraitConfig({ 
+  onStartCountdown, 
+  selectedIndex, 
+  onTimeChange, 
+  timeIntervals 
+}: PortraitConfigProps) {
   const handleStartTimer = () => {
-    const selectedTime = TIME_INTERVALS[selectedIndex];
+    const selectedTime = timeIntervals[selectedIndex];
     const [minutes, seconds] = selectedTime.split(':').map(Number);
     onStartCountdown({ minutes, seconds });
   };
 
-  const formatTime = (minutes: number, seconds: number): string => {
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-      {/* Header avec flèche de retour */}
+      {/* Header */}
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16 }}>
         <TouchableOpacity onPress={() => router.back()}>
           <FontAwesome name="arrow-left" size={24} color="#87CEEB" />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ color: '#FFD700', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 }}>
-            FOR TIME
+          <Text style={{ color: '#87CEEB', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 }}>
+            AMRAP
           </Text>
           <Text style={{ color: '#FFFFFF', fontSize: 14, marginTop: 4, opacity: 0.8 }}>
-            Set your target time
+            As Many Rounds As Possible
           </Text>
         </View>
         <View style={{ width: 24 }} />
@@ -94,7 +54,7 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
         <View style={{ flex: 1, justifyContent: 'center' }}>
           <View style={{ alignItems: 'center', marginBottom: 40 }}>
             <Text style={{
-              color: '#FFD700',
+              color: '#87CEEB',
               fontSize: 18,
               fontWeight: '600',
               textAlign: 'center',
@@ -106,7 +66,7 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
             <View style={{
               width: 40,
               height: 1,
-              backgroundColor: '#FFD700',
+              backgroundColor: '#F5F5DC',
               marginTop: 12,
               opacity: 0.6
             }} />
@@ -117,8 +77,8 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
             borderRadius: 24,
             padding: 28,
             borderWidth: 1,
-            borderColor: '#00E0FF30',
-            shadowColor: '#00E0FF',
+            borderColor: '#87CEEB30',
+            shadowColor: '#87CEEB',
             shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.15,
             shadowRadius: 16,
@@ -127,7 +87,7 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
             {/* Single time selector */}
             <View style={{ alignItems: 'center' }}>
               <Text style={{
-                color: '#00E0FF',
+                color: '#87CEEB',
                 fontSize: 14,
                 fontWeight: '500',
                 marginBottom: 16,
@@ -135,18 +95,18 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
                 letterSpacing: 3,
                 opacity: 0.8
               }}>
-                TARGET TIME
+                TIME CAP
               </Text>
 
               <View style={{
-                backgroundColor: '#00E0FF10',
+                backgroundColor: '#87CEEB10',
                 borderRadius: 20,
                 padding: 20,
                 borderWidth: 1,
-                borderColor: '#00E0FF40',
+                borderColor: '#87CEEB40',
                 width: 140,
                 alignItems: 'center',
-                shadowColor: '#00E0FF',
+                shadowColor: '#87CEEB',
                 shadowOffset: { width: 0, height: 6 },
                 shadowOpacity: 0.1,
                 shadowRadius: 12,
@@ -154,9 +114,9 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
               }}>
                 <View style={{ height: 200, width: 120 }}>
                   <WheelPicker
-                    items={TIME_INTERVALS}
+                    items={timeIntervals}
                     selectedIndex={selectedIndex}
-                    onIndexChange={handleTimeChange}
+                    onIndexChange={onTimeChange}
                     itemHeight={40}
                     visibleItems={5}
                     width={120}
@@ -167,20 +127,20 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
 
             {/* Configuration Summary */}
             <View style={{
-              backgroundColor: '#FFD70015',
+              backgroundColor: '#F5F5DC15',
               borderRadius: 16,
               padding: 18,
               marginTop: 24,
               borderWidth: 1,
-              borderColor: '#FFD70040',
-              shadowColor: '#FFD700',
+              borderColor: '#F5F5DC40',
+              shadowColor: '#F5F5DC',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.2,
               shadowRadius: 8,
               elevation: 4
             }}>
               <Text style={{
-                color: '#FFD700',
+                color: '#87CEEB',
                 fontSize: 16,
                 fontWeight: '600',
                 textAlign: 'center',
@@ -194,7 +154,16 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
                 fontWeight: 'bold',
                 textAlign: 'center'
               }}>
-                Target Time: {TIME_INTERVALS[selectedIndex]}
+                Time Cap: {timeIntervals[selectedIndex]}
+              </Text>
+              <Text style={{
+                color: '#FFFFFF',
+                fontSize: 14,
+                textAlign: 'center',
+                marginTop: 4,
+                opacity: 0.8
+              }}>
+                Complete as many rounds as possible within the time limit
               </Text>
             </View>
           </View>
@@ -204,12 +173,12 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
         <TouchableOpacity
           onPress={handleStartTimer}
           style={{
-            backgroundColor: '#FFD700',
+            backgroundColor: '#F5F5DC',
             borderRadius: 20,
             paddingVertical: 16,
             marginHorizontal: 24,
             marginBottom: 32,
-            shadowColor: '#FFD700',
+            shadowColor: '#F5F5DC',
             shadowOffset: { width: 0, height: 8 },
             shadowOpacity: 0.3,
             shadowRadius: 16,

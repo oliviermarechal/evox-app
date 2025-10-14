@@ -3,6 +3,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { useOrientation } from '@/hooks/useOrientation';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -14,6 +15,7 @@ function TabBarIcon(props: {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { isLandscape } = useOrientation();
 
   return (
     <Tabs
@@ -25,6 +27,7 @@ export default function TabLayout() {
           borderTopColor: '#333',
         },
         headerShown: useClientOnlyValue(false, true),
+        tabBarShowLabel: !isLandscape, // Hide labels in landscape
       }}>
       <Tabs.Screen
         name="index"

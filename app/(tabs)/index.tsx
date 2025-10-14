@@ -2,8 +2,14 @@ import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import SportCard from '@/components/SportCard';
+import { useOrientation } from '@/hooks/useOrientation';
+import { useScreenOrientation } from '@/hooks/useScreenOrientation';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 export default function HomeScreen() {
+  const { isLandscape } = useOrientation();
+  useScreenOrientation(ScreenOrientation.OrientationLock.DEFAULT);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
       <View style={{ flex: 1, paddingHorizontal: 24 }}>
@@ -31,10 +37,11 @@ export default function HomeScreen() {
         <View style={{ flex: 1, justifyContent: 'center' }}>
           <View style={{ 
             flexDirection: 'row', 
-            flexWrap: 'wrap', 
-            gap: 24,
+            flexWrap: isLandscape ? 'wrap' : 'wrap', 
+            gap: isLandscape ? 12 : 24,
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            paddingHorizontal: isLandscape ? 8 : 0
           }}>
             <SportCard
               title="FREE"
@@ -46,7 +53,7 @@ export default function HomeScreen() {
               title="FOR TIME"
               subtitle="Set target time"
               iconName="clock-o"
-              onPress={() => router.push('/timers/fortime' as any)}
+              onPress={() => router.push('/timers/fortime')}
             />
             <SportCard
               title="EMOM"
@@ -58,13 +65,13 @@ export default function HomeScreen() {
               title="AMRAP"
               subtitle="As Many Rounds As Possible"
               iconName="repeat"
-              onPress={() => router.push('/timers/amrap' as any)}
+              onPress={() => router.push('/timers/amrap')}
             />
             <SportCard
               title="TABATA"
               subtitle="High Intensity Interval"
               iconName="bolt"
-              onPress={() => router.push('/timers/tabata' as any)}
+              onPress={() => router.push('/timers/tabata')}
             />
           </View>
         </View>

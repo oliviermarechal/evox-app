@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useOrientation } from '@/hooks/useOrientation';
+import { useScreenOrientation } from '@/hooks/useScreenOrientation';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import ConfigComponent from './ConfigComponent';
 import CountdownComponent from './CountdownComponent';
 import TimerComponent from './TimerComponent';
@@ -14,6 +16,9 @@ interface EMOMConfig {
 }
 
 export default function EMOMScreen() {
+  // Allow all orientations for timer screens
+  useScreenOrientation(ScreenOrientation.OrientationLock.DEFAULT);
+  
   const { rounds: roundsParam, duration: durationParam } = useLocalSearchParams<{
     rounds?: string;
     duration?: string;

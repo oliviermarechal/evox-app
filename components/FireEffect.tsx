@@ -28,7 +28,6 @@ export default function FireEffect({ isVisible, size = 280, timerPosition }: Fir
 
   useEffect(() => {
     if (isVisible) {
-      // Pulse agressif du cercle du timer
       pulse.value = withRepeat(
         withSequence(
           withTiming(1.15, { duration: 150, easing: Easing.out(Easing.quad) }),
@@ -36,11 +35,10 @@ export default function FireEffect({ isVisible, size = 280, timerPosition }: Fir
           withTiming(1.1, { duration: 120, easing: Easing.out(Easing.quad) }),
           withTiming(1, { duration: 200, easing: Easing.inOut(Easing.quad) })
         ),
-        3, // 3 répétitions
+        3,
         false
       );
 
-      // 3 ondes de choc séquentielles
       shockwave1.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.quad) });
       
       setTimeout(() => {
@@ -51,7 +49,6 @@ export default function FireEffect({ isVisible, size = 280, timerPosition }: Fir
         shockwave3.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.quad) });
       }, 400);
     } else {
-      // Reset
       shockwave1.value = 0;
       shockwave2.value = 0;
       shockwave3.value = 0;
@@ -59,33 +56,27 @@ export default function FireEffect({ isVisible, size = 280, timerPosition }: Fir
     }
   }, [isVisible]);
 
-  // Calculer la position du centre du timer (avec offset pour le conteneur étendu)
   const timerCenterX = timerPosition 
-    ? timerPosition.x + timerPosition.width / 2 + 100 // +100 pour l'offset du conteneur
+    ? timerPosition.x + timerPosition.width / 2 + 100
     : screenWidth / 2 + 100;
   const timerCenterY = timerPosition 
-    ? timerPosition.y + timerPosition.height / 2 + 100 // +100 pour l'offset du conteneur
+    ? timerPosition.y + timerPosition.height / 2 + 100
     : screenHeight / 2 + 100;
   
-  const timerRadius = size / 2 - 6; // Rayon du timer (account for border)
+  const timerRadius = size / 2 - 6;
   
-  // Calculer la distance maximale entre le centre du timer et tous les coins de l'écran
   const distToTopLeft = Math.sqrt(timerCenterX * timerCenterX + timerCenterY * timerCenterY);
   const distToTopRight = Math.sqrt((screenWidth - timerCenterX) * (screenWidth - timerCenterX) + timerCenterY * timerCenterY);
   const distToBottomLeft = Math.sqrt(timerCenterX * timerCenterX + (screenHeight - timerCenterY) * (screenHeight - timerCenterY));
   const distToBottomRight = Math.sqrt((screenWidth - timerCenterX) * (screenWidth - timerCenterX) + (screenHeight - timerCenterY) * (screenHeight - timerCenterY));
   
-  // Le rayon maximum nécessaire pour couvrir tout l'écran depuis le centre du timer
-  // Utiliser un rayon très grand pour s'assurer qu'il n'y a pas de bandes
   const maxRadius = Math.max(screenWidth, screenHeight) * 1.5;
 
-  // Props pour le pulse du timer
   const pulseProps = useAnimatedProps(() => ({
     r: timerRadius * (1 + interpolate(pulse.value, [0, 1], [0, 0.15])),
     opacity: interpolate(pulse.value, [0, 1], [1, 0.7]),
   }));
 
-  // Props pour les ondes de choc - elles s'étendent maintenant sur tout l'écran
   const shockwave1Props = useAnimatedProps(() => ({
     r: timerRadius + interpolate(shockwave1.value, [0, 1], [0, maxRadius]),
     opacity: interpolate(shockwave1.value, [0, 1], [0.6, 0]),
@@ -112,8 +103,8 @@ export default function FireEffect({ isVisible, size = 280, timerPosition }: Fir
       bottom: -100,
       width: screenWidth + 200, 
       height: screenHeight + 200, 
-      zIndex: 9999, // Au-dessus de tout
-      pointerEvents: 'none' // N'interfère pas avec les interactions
+      zIndex: 9999,
+      pointerEvents: 'none'
     }}>
       <Svg width={screenWidth + 200} height={screenHeight + 200}>
         <Defs>

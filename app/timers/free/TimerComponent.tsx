@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FireEffect from '@/components/FireEffect';
 import SlideToAction from '@/components/SlideToAction';
 
@@ -88,6 +90,22 @@ export default function TimerComponent({ isLandscape, onResetTimer }: TimerCompo
   if (isLandscape && (isRunning || isPaused) && !finalTime) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
+        {/* Header avec flèche de retour */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16 }}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <FontAwesome name="arrow-left" size={24} color="#87CEEB" />
+          </TouchableOpacity>
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={{ color: '#FFD700', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 }}>
+              FREE TIMER
+            </Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 14, marginTop: 4, opacity: 0.8 }}>
+              Stopwatch
+            </Text>
+          </View>
+          <View style={{ width: 24 }} />
+        </View>
+        
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
           {/* Effet de flamme SVG */}
           <FireEffect isVisible={isOnFire} size={200} timerPosition={timerPosition} />
@@ -159,6 +177,22 @@ export default function TimerComponent({ isLandscape, onResetTimer }: TimerCompo
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
+      {/* Header avec flèche de retour */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16 }}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <FontAwesome name="arrow-left" size={24} color="#87CEEB" />
+        </TouchableOpacity>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ color: '#FFD700', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 }}>
+            FREE TIMER
+          </Text>
+          <Text style={{ color: '#FFFFFF', fontSize: 14, marginTop: 4, opacity: 0.8 }}>
+            Stopwatch
+          </Text>
+        </View>
+        <View style={{ width: 24 }} />
+      </View>
+      
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
           <Text style={{

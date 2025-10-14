@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useOrientation } from '@/hooks/useOrientation';
 
 interface SportCardProps {
   title: string;
@@ -10,14 +11,17 @@ interface SportCardProps {
 }
 
 export default function SportCard({ title, subtitle, iconName, onPress }: SportCardProps) {
+  const { isLandscape } = useOrientation();
+  
   return (
     <TouchableOpacity 
       onPress={onPress}
       style={{
         backgroundColor: '#000000',
         borderRadius: 16,
-        padding: 20,
-        width: '45%',
+        padding: isLandscape ? 16 : 20,
+        width: isLandscape ? '18%' : '45%',
+        minWidth: isLandscape ? 120 : 140,
         borderWidth: 1,
         borderColor: '#87CEEB30',
         alignItems: 'center',

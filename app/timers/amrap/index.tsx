@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams } from 'expo-router';
 import { useOrientation } from '@/hooks/useOrientation';
+import { useScreenOrientation } from '@/hooks/useScreenOrientation';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import ConfigComponent from './ConfigComponent';
 import CountdownComponent from './CountdownComponent';
+import LandscapeCountdown from './landscape/LandscapeCountdown';
 import TimerComponent from './TimerComponent';
 
 interface AMRAPConfig {
@@ -14,11 +17,15 @@ interface AMRAPConfig {
 }
 
 export default function AMRAPScreen() {
+  // Allow all orientations for timer screens
+  useScreenOrientation(ScreenOrientation.OrientationLock.DEFAULT);
+  
   const [showTimer, setShowTimer] = useState(false);
   const [validatedConfig, setValidatedConfig] = useState<AMRAPConfig | null>(null);
   const [isCountdown, setIsCountdown] = useState(false);
   const [countdownValue, setCountdownValue] = useState(10);
   const [isCountdownPaused, setIsCountdownPaused] = useState(false);
+  const countdownIntervalRef = useRef<any>(null);
   
   const { isLandscape } = useOrientation();
   const { minutes: minutesParam, seconds: secondsParam } = useLocalSearchParams();
@@ -41,10 +48,13 @@ export default function AMRAPScreen() {
   };
 
   const startCountdown = () => {
-    const interval = setInterval(() => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+    countdownIntervalRef.current = setInterval(() => {
       setCountdownValue(prev => {
         if (prev <= 1) {
-          clearInterval(interval);
+          clearInterval(countdownIntervalRef.current);
           setIsCountdown(false);
           return 0;
         }
@@ -58,11 +68,16 @@ export default function AMRAPScreen() {
   };
 
   const handlePauseCountdown = () => {
+    console.log('Pausing countdown');
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
     setIsCountdownPaused(true);
   };
 
   const handleResumeCountdown = () => {
     setIsCountdownPaused(false);
+    startCountdown();
   };
 
   const handleCancelCountdown = () => {
@@ -88,16 +103,29 @@ export default function AMRAPScreen() {
   }
 
   if (isCountdown) {
-    return (
-      <CountdownComponent
-        countdownValue={countdownValue}
-        isCountdownPaused={isCountdownPaused}
-        onSkipCountdown={handleSkipCountdown}
-        onPauseCountdown={handlePauseCountdown}
-        onResumeCountdown={handleResumeCountdown}
-        onCancelCountdown={handleCancelCountdown}
-      />
-    );
+    if (isLandscape) {
+      return (
+        <LandscapeCountdown
+          countdownValue={countdownValue}
+          isCountdownPaused={isCountdownPaused}
+          onSkipCountdown={handleSkipCountdown}
+          onPauseCountdown={handlePauseCountdown}
+          onResumeCountdown={handleResumeCountdown}
+          onCancelCountdown={handleCancelCountdown}
+        />
+      );
+    } else {
+      return (
+        <CountdownComponent
+          countdownValue={countdownValue}
+          isCountdownPaused={isCountdownPaused}
+          onSkipCountdown={handleSkipCountdown}
+          onPauseCountdown={handlePauseCountdown}
+          onResumeCountdown={handleResumeCountdown}
+          onCancelCountdown={handleCancelCountdown}
+        />
+      );
+    }
   }
 
   return (

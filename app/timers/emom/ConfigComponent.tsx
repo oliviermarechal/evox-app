@@ -2,9 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import WheelPicker from '@/components/WheelPicker';
 
-// Styles constants supprimés - utilisent maintenant les styles par défaut du WheelPicker
-
-// Items constants pour éviter les re-créations
 const ROUNDS_ITEMS = Array.from({ length: 20 }, (_, i) => `${i + 1}`);
 const DURATION_ITEMS = ['1', '30s', '45s', '1:00', '1:30', '2:00', '3:00', '5:00'];
 const DURATION_VALUES = [1, 30, 45, 60, 90, 120, 180, 300];

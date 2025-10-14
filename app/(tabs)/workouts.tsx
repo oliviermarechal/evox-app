@@ -6,8 +6,13 @@ import { router } from 'expo-router';
 import WorkoutSessions from '@/components/workout/WorkoutSessions';
 import WorkoutBuilder from '@/components/workout/WorkoutBuilder';
 import { WorkoutSession } from '@/lib/workoutTypes';
+import { useScreenOrientation } from '@/hooks/useScreenOrientation';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 export default function WorkoutsScreen() {
+  // Force portrait orientation for workouts screen
+  useScreenOrientation(ScreenOrientation.OrientationLock.PORTRAIT);
+  
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingSession, setEditingSession] = useState<WorkoutSession | null>(null);

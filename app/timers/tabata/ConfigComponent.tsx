@@ -25,8 +25,6 @@ const REST_TIME_ITEMS = ['5s', '10s', '15s', '20s', '30s', '45s', '1:00', '1:15'
 const WORK_TIME_VALUES = [10, 15, 20, 30, 45, 60, 75, 90, 120, 180, 240, 300];
 const REST_TIME_VALUES = [5, 10, 15, 20, 30, 45, 60, 75, 90, 120];
 
-// Styles constants supprimés - utilisent maintenant les styles par défaut du WheelPicker
-
 export default function ConfigComponent({ 
   onStartCountdown, 
   initialRounds = 8, 

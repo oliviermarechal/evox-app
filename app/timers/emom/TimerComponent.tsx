@@ -221,7 +221,7 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
           </Text>
 
           {/* Control Buttons */}
-          <View style={{ flexDirection: 'row', gap: 20 }}>
+          <View style={{ flexDirection: 'row', gap: 20, marginBottom: 32 }}>
             {!isRunning && !isPaused && !finalTime && (
               <TouchableOpacity
                 onPress={startTimer}
@@ -236,14 +236,15 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
                   shadowOffset: { width: 0, height: 8 },
                   shadowOpacity: 0.4,
                   shadowRadius: 15,
-                  elevation: 12
+                  elevation: 12,
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}
               >
                 <Text style={{
                   color: '#000000',
                   fontSize: 18,
                   fontWeight: 'bold',
-                  textAlign: 'center',
                   letterSpacing: 1
                 }}>
                   START
@@ -265,14 +266,15 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
                   shadowOffset: { width: 0, height: 8 },
                   shadowOpacity: 0.4,
                   shadowRadius: 15,
-                  elevation: 12
+                  elevation: 12,
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}
               >
                 <Text style={{
                   color: '#000000',
                   fontSize: 18,
                   fontWeight: 'bold',
-                  textAlign: 'center',
                   letterSpacing: 1
                 }}>
                   PAUSE
@@ -294,14 +296,15 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
                   shadowOffset: { width: 0, height: 8 },
                   shadowOpacity: 0.4,
                   shadowRadius: 15,
-                  elevation: 12
+                  elevation: 12,
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}
               >
                 <Text style={{
                   color: '#000000',
                   fontSize: 18,
                   fontWeight: 'bold',
-                  textAlign: 'center',
                   letterSpacing: 1
                 }}>
                   RESUME
@@ -323,14 +326,15 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
                   shadowOffset: { width: 0, height: 6 },
                   shadowOpacity: 0.3,
                   shadowRadius: 12,
-                  elevation: 8
+                  elevation: 8,
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}
               >
                 <Text style={{
                   color: '#87CEEB',
                   fontSize: 16,
                   fontWeight: 'bold',
-                  textAlign: 'center',
                   letterSpacing: 1
                 }}>
                   RESET
@@ -338,6 +342,17 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
               </TouchableOpacity>
             )}
           </View>
+
+          {/* Slider to Stop */}
+          {(isRunning || isPaused) && (
+            <View style={{ alignItems: 'center' }}>
+              <SlideToAction
+                label="SLIDE TO STOP"
+                onSlideComplete={resetTimer}
+                width={280}
+              />
+            </View>
+          )}
         </View>
       </SafeAreaView>
     );
@@ -362,9 +377,9 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={{ flex: 1, paddingHorizontal: 24 }}>
+      <View style={{ flex: 1, paddingHorizontal: 24, justifyContent: 'space-between' }}>
         {/* Timer Display with Circle */}
-        <View style={{ alignItems: 'center', marginBottom: 32 }}>
+        <View style={{ alignItems: 'center', flex: 1, justifyContent: 'center' }}>
           <Text style={{
             color: '#87CEEB',
             fontSize: 24,
@@ -416,7 +431,7 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
         </View>
 
         {/* EMOM Status Card */}
-        <View style={{ marginBottom: 32 }}>
+        <View style={{ marginBottom: 20 }}>
           <View style={{
             backgroundColor: '#000000',
             borderRadius: 16,
@@ -445,7 +460,7 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
         </View>
 
         {/* Control Buttons */}
-        <View style={{ flexDirection: 'row', gap: 20, justifyContent: 'center', marginBottom: 32 }}>
+        <View style={{ flexDirection: 'row', gap: 20, justifyContent: 'center', marginBottom: 20 }}>
           {!isRunning && !isPaused && !finalTime && (
             <TouchableOpacity
               onPress={startTimer}
@@ -460,14 +475,15 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.4,
                 shadowRadius: 15,
-                elevation: 12
+                elevation: 12,
+                justifyContent: 'center',
+                alignItems: 'center'
               }}
             >
               <Text style={{
                 color: '#000000',
                 fontSize: 18,
                 fontWeight: 'bold',
-                textAlign: 'center',
                 letterSpacing: 1
               }}>
                 START
@@ -489,14 +505,15 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.4,
                 shadowRadius: 15,
-                elevation: 12
+                elevation: 12,
+                justifyContent: 'center',
+                alignItems: 'center'
               }}
             >
               <Text style={{
                 color: '#000000',
                 fontSize: 18,
                 fontWeight: 'bold',
-                textAlign: 'center',
                 letterSpacing: 1
               }}>
                 PAUSE
@@ -518,14 +535,15 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.4,
                 shadowRadius: 15,
-                elevation: 12
+                elevation: 12,
+                justifyContent: 'center',
+                alignItems: 'center'
               }}
             >
               <Text style={{
                 color: '#000000',
                 fontSize: 18,
                 fontWeight: 'bold',
-                textAlign: 'center',
                 letterSpacing: 1
               }}>
                 RESUME
@@ -547,14 +565,15 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
                 shadowOffset: { width: 0, height: 6 },
                 shadowOpacity: 0.3,
                 shadowRadius: 12,
-                elevation: 8
+                elevation: 8,
+                justifyContent: 'center',
+                alignItems: 'center'
               }}
             >
               <Text style={{
                 color: '#87CEEB',
                 fontSize: 16,
                 fontWeight: 'bold',
-                textAlign: 'center',
                 letterSpacing: 1
               }}>
                 RESET
@@ -565,7 +584,7 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
 
         {/* Slider to Stop */}
         {(isRunning || isPaused) && (
-          <View style={{ marginTop: 40, alignItems: 'center', marginBottom: 40 }}>
+          <View style={{ alignItems: 'center', marginBottom: 20 }}>
             <SlideToAction
               label="SLIDE TO STOP"
               onSlideComplete={resetTimer}
@@ -576,7 +595,7 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
 
         {/* Final Time Display */}
         {finalTime && (
-          <View style={{ marginTop: 40, alignItems: 'center', marginBottom: 40 }}>
+          <View style={{ alignItems: 'center', marginBottom: 20 }}>
             <Text style={{
               color: '#87CEEB',
               fontSize: 24,
@@ -594,7 +613,7 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
             </Text>
           </View>
         )}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

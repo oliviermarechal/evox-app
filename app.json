@@ -3,7 +3,7 @@
     "name": "evox-app",
     "slug": "evox",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "evoxapp",
     "userInterfaceStyle": "automatic",
@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.loxx.evox",
+      "requiresFullScreen": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

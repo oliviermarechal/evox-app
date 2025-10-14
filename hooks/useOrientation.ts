@@ -10,7 +10,6 @@ export function useOrientation() {
       setIsLandscape(width > height);
     });
 
-    // Vérifier l'orientation initiale
     const { width, height } = Dimensions.get('window');
     setIsLandscape(width > height);
 

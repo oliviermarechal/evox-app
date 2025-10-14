@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams } from 'expo-router';
 import { useOrientation } from '@/hooks/useOrientation';
+import { useScreenOrientation } from '@/hooks/useScreenOrientation';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import ConfigComponent from './ConfigComponent';
 import CountdownComponent from './CountdownComponent';
 import TimerComponent from './TimerComponent';
@@ -15,6 +17,9 @@ interface TabataConfig {
 }
 
 export default function TabataScreen() {
+  // Allow all orientations for timer screens
+  useScreenOrientation(ScreenOrientation.OrientationLock.DEFAULT);
+  
   const [showTimer, setShowTimer] = useState(false);
   const [validatedConfig, setValidatedConfig] = useState<TabataConfig | null>(null);
   const [isCountdown, setIsCountdown] = useState(false);
