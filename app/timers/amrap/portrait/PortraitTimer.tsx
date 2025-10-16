@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
@@ -14,101 +14,34 @@ interface AMRAPConfig {
 interface PortraitTimerProps {
   config: AMRAPConfig;
   onResetTimer: () => void;
+  remainingMilliseconds: number;
+  isRunning: boolean;
+  isPaused: boolean;
+  currentRound: number;
+  finalTime: string | null;
+  isOnFire: boolean;
+  startTimer: () => void;
+  pauseTimer: () => void;
+  resetTimer: () => void;
+  incrementRound: () => void;
+  formatTime: (ms: number) => string;
 }
 
-export default function PortraitTimer({ config, onResetTimer }: PortraitTimerProps) {
-  const [remainingMilliseconds, setRemainingMilliseconds] = useState(config.minutes * 60 * 1000 + config.seconds * 1000); // ✅ Temps restant
-  const [isRunning, setIsRunning] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [currentRound, setCurrentRound] = useState(1);
-  const [finalTime, setFinalTime] = useState<string | null>(null);
-  const [isOnFire, setIsOnFire] = useState(false);
-
-  const intervalRef = useRef<any>(null);
-
-  const formatTime = (ms: number): string => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    const centiseconds = Math.floor((ms % 1000) / 10);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
-  };
-
-
-  const startTimer = () => {
-    if (!isRunning && !isPaused) {
-      setIsRunning(true);
-      intervalRef.current = setInterval(() => {
-        setRemainingMilliseconds(prev => {
-          const newRemaining = prev - 10;
-          if (newRemaining <= 0) {
-            clearInterval(intervalRef.current);
-            setIsRunning(false);
-            setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000));
-            setIsOnFire(true);
-            
-            return 0;
-          }
-          return newRemaining;
-        });
-      }, 10);
-    } else if (isPaused) {
-      setIsPaused(false);
-      setIsRunning(true);
-      intervalRef.current = setInterval(() => {
-        setRemainingMilliseconds(prev => {
-          const newRemaining = prev - 10;
-          if (newRemaining <= 0) {
-            clearInterval(intervalRef.current);
-            setIsRunning(false);
-            setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000));
-            setIsOnFire(true);
-            return 0;
-          }
-          return newRemaining;
-        });
-      }, 10);
-    }
-  };
-
-  const pauseTimer = () => {
-    if (isRunning) {
-      setIsRunning(false);
-      setIsPaused(true);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
-  };
-
-  const resetTimer = () => {
-    setIsRunning(false);
-    setIsPaused(false);
-    setRemainingMilliseconds(config.minutes * 60 * 1000 + config.seconds * 1000); // ✅ Reset à la durée configurée
-    setCurrentRound(1);
-    setFinalTime(null);
-    setIsOnFire(false);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    onResetTimer();
-  };
-
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
-
-  // Auto-start timer
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      startTimer();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+export default function PortraitTimer({ 
+  config, 
+  onResetTimer,
+  remainingMilliseconds,
+  isRunning,
+  isPaused,
+  currentRound,
+  finalTime,
+  isOnFire,
+  startTimer,
+  pauseTimer,
+  resetTimer,
+  incrementRound,
+  formatTime
+}: PortraitTimerProps) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
@@ -238,7 +171,7 @@ export default function PortraitTimer({ config, onResetTimer }: PortraitTimerPro
             </Text>
           </View>
 
-          <AddRoundButton onPress={() => setCurrentRound(prev => prev + 1)} />
+          <AddRoundButton onPress={incrementRound} />
         </View>
       </View>
 
