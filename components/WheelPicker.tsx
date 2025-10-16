@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, ScrollView } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 interface WheelPickerProps {
   items: string[];
@@ -12,16 +13,23 @@ interface WheelPickerProps {
   selectedTextStyle?: object;
 }
 
-// Styles par défaut (style EMOM)
 const DEFAULT_TEXT_STYLE = {
-  color: '#FFFFFF60',
-  fontSize: 20,
+  color: 'rgba(135, 206, 235, 0.6)',
+  fontSize: 18,
+  fontWeight: '400' as const,
+  fontFamily: 'monospace',
+  letterSpacing: 1,
 };
 
 const DEFAULT_SELECTED_STYLE = {
-  color: '#FFFFFF',
-  fontSize: 24,
-  fontWeight: 'bold' as const,
+  color: '#F5F5DC',
+  fontSize: 28,
+  fontWeight: '300' as const,
+  fontFamily: 'monospace',
+  letterSpacing: 2,
+  textShadowColor: 'rgba(135, 206, 235, 0.4)',
+  textShadowOffset: { width: 0, height: 0 },
+  textShadowRadius: 15,
 };
 
 export default function WheelPicker({
@@ -71,6 +79,8 @@ export default function WheelPicker({
     
     if (index >= 0 && index < items.length && index !== lastSelectedIndex.current) {
       lastSelectedIndex.current = index;
+      // Vibration légère à chaque changement d'item
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       onIndexChange(index);
     }
   };
@@ -115,9 +125,9 @@ export default function WheelPicker({
     const distance = Math.abs(adjustedIndex - selectedIndex);
     
     if (distance === 0) return 1;
-    if (distance === 1) return 0.6;
-    if (distance === 2) return 0.3;
-    return 0.1;
+    if (distance === 1) return 0.7;
+    if (distance === 2) return 0.4;
+    return 0.2;
   };
 
   const getItemScale = (index: number) => {
@@ -125,13 +135,13 @@ export default function WheelPicker({
     const distance = Math.abs(adjustedIndex - selectedIndex);
     
     if (distance === 0) return 1;
-    if (distance === 1) return 0.9;
-    return 0.8;
+    if (distance === 1) return 0.88;
+    return 0.75;
   };
 
   return (
     <View style={{ height: containerHeight, width, position: 'relative' }}>
-      {/* Selection indicator */}
+      {/* Selection indicator - Design ultra premium */}
       <View
         style={{
           position: 'absolute',
@@ -139,12 +149,40 @@ export default function WheelPicker({
           left: 0,
           right: 0,
           height: itemHeight,
-          borderTopWidth: 1,
-          borderBottomWidth: 1,
-          borderColor: '#87CEEB40',
-          backgroundColor: '#87CEEB10',
+          borderTopWidth: 1.5,
+          borderBottomWidth: 1.5,
+          borderColor: 'rgba(135, 206, 235, 0.4)',
+          backgroundColor: 'rgba(135, 206, 235, 0.08)',
           zIndex: 1,
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          borderRadius: 12,
+          marginHorizontal: 12,
+          shadowColor: '#87CEEB',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.25,
+          shadowRadius: 20,
+          elevation: 4
+        }}
+      />
+      
+      {/* Gradient overlay pour effet premium */}
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 0,
+          pointerEvents: 'none',
+          borderRadius: 12,
+          marginHorizontal: 12,
+          backgroundColor: 'transparent',
+          shadowColor: '#87CEEB',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.1,
+          shadowRadius: 30,
+          elevation: 1
         }}
       />
       

@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import WheelPicker from '@/components/WheelPicker';
+import { Header } from '@/components/Header';
 
 interface AMRAPConfig {
   minutes: number;
@@ -11,7 +11,7 @@ interface AMRAPConfig {
 }
 
 interface PortraitConfigProps {
-  onStartCountdown: (config: AMRAPConfig) => void;
+  onStartCountdown: () => void;
   initialMinutes?: number;
   initialSeconds?: number;
   selectedIndex: number;
@@ -25,168 +25,125 @@ export default function PortraitConfig({
   onTimeChange, 
   timeIntervals 
 }: PortraitConfigProps) {
-  const handleStartTimer = () => {
-    const selectedTime = timeIntervals[selectedIndex];
-    const [minutes, seconds] = selectedTime.split(':').map(Number);
-    onStartCountdown({ minutes, seconds });
-  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-      {/* Header */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16 }}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <FontAwesome name="arrow-left" size={24} color="#87CEEB" />
-        </TouchableOpacity>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ color: '#87CEEB', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 }}>
-            AMRAP
-          </Text>
-          <Text style={{ color: '#FFFFFF', fontSize: 14, marginTop: 4, opacity: 0.8 }}>
-            As Many Rounds As Possible
-          </Text>
-        </View>
-        <View style={{ width: 24 }} />
-      </View>
+      {/* Header générique */}
+      <Header 
+        onBackPress={() => router.back()}
+        title="AMRAP"
+        subtitle="As Many Rounds As Possible"
+      />
 
-      <View style={{ flex: 1, paddingHorizontal: 24, justifyContent: 'space-between' }}>
-        {/* Configuration */}
-        <View style={{ flex: 1, justifyContent: 'center' }}>
-          <View style={{ alignItems: 'center', marginBottom: 40 }}>
-            <Text style={{
-              color: '#87CEEB',
-              fontSize: 18,
-              fontWeight: '600',
-              textAlign: 'center',
-              letterSpacing: 4,
-              opacity: 0.9
-            }}>
-              CONFIGURATION
-            </Text>
-            <View style={{
-              width: 40,
-              height: 1,
-              backgroundColor: '#F5F5DC',
-              marginTop: 12,
-              opacity: 0.6
-            }} />
-          </View>
+      {/* Main Content - Direct layout without container */}
+      <View style={{ 
+        flex: 1, 
+        paddingHorizontal: 32, 
+        paddingVertical: 20,
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Text style={{
+          color: 'rgba(135, 206, 235, 0.8)',
+          fontSize: 16,
+          fontWeight: '600',
+          textAlign: 'center',
+          letterSpacing: 3,
+          marginBottom: 8
+        }}>
+          CONFIGURATION
+        </Text>
 
-          <View style={{
-            backgroundColor: '#0F0F10',
-            borderRadius: 24,
-            padding: 28,
-            borderWidth: 1,
-            borderColor: '#87CEEB30',
-            shadowColor: '#87CEEB',
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.15,
-            shadowRadius: 16,
-            elevation: 6
+        <Text style={{
+          color: 'rgba(135, 206, 235, 0.8)',
+          fontSize: 14,
+          fontWeight: '500',
+          marginBottom: 32,
+          textAlign: 'center',
+          letterSpacing: 2,
+          opacity: 0.8
+        }}>
+          TIME CAP
+        </Text>
+
+        <View style={{
+          backgroundColor: 'rgba(135, 206, 235, 0.05)',
+          borderRadius: 16,
+          padding: 20,
+          borderWidth: 1.5,
+          borderColor: 'rgba(135, 206, 235, 0.3)',
+          alignItems: 'center',
+          shadowColor: '#87CEEB',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.4,
+          elevation: 8,
+          marginBottom: 32,
+          width: 220
+        }}>
+          <View style={{ 
+            height: 220,
+            width: 200,
+            borderRadius: 12,
+            overflow: 'hidden'
           }}>
-            {/* Single time selector */}
-            <View style={{ alignItems: 'center' }}>
-              <Text style={{
-                color: '#87CEEB',
-                fontSize: 14,
-                fontWeight: '500',
-                marginBottom: 16,
-                textAlign: 'center',
-                letterSpacing: 3,
-                opacity: 0.8
-              }}>
-                TIME CAP
-              </Text>
-
-              <View style={{
-                backgroundColor: '#87CEEB10',
-                borderRadius: 20,
-                padding: 20,
-                borderWidth: 1,
-                borderColor: '#87CEEB40',
-                width: 140,
-                alignItems: 'center',
-                shadowColor: '#87CEEB',
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-                elevation: 4
-              }}>
-                <View style={{ height: 200, width: 120 }}>
-                  <WheelPicker
-                    items={timeIntervals}
-                    selectedIndex={selectedIndex}
-                    onIndexChange={onTimeChange}
-                    itemHeight={40}
-                    visibleItems={5}
-                    width={120}
-                  />
-                </View>
-              </View>
-            </View>
-
-            {/* Configuration Summary */}
-            <View style={{
-              backgroundColor: '#F5F5DC15',
-              borderRadius: 16,
-              padding: 18,
-              marginTop: 24,
-              borderWidth: 1,
-              borderColor: '#F5F5DC40',
-              shadowColor: '#F5F5DC',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
-              elevation: 4
-            }}>
-              <Text style={{
-                color: '#87CEEB',
-                fontSize: 16,
-                fontWeight: '600',
-                textAlign: 'center',
-                marginBottom: 8
-              }}>
-                Configuration Summary
-              </Text>
-              <Text style={{
-                color: '#FFFFFF',
-                fontSize: 18,
-                fontWeight: 'bold',
-                textAlign: 'center'
-              }}>
-                Time Cap: {timeIntervals[selectedIndex]}
-              </Text>
-              <Text style={{
-                color: '#FFFFFF',
-                fontSize: 14,
-                textAlign: 'center',
-                marginTop: 4,
-                opacity: 0.8
-              }}>
-                Complete as many rounds as possible within the time limit
-              </Text>
-            </View>
+            <WheelPicker
+              items={timeIntervals}
+              selectedIndex={selectedIndex}
+              onIndexChange={onTimeChange}
+              itemHeight={44}
+              visibleItems={5}
+              width={200}
+            />
           </View>
         </View>
 
-        {/* Start Button */}
+        {/* Configuration Summary */}
+        <Text style={{
+          color: 'rgba(135, 206, 235, 0.8)',
+          fontSize: 14,
+          fontWeight: '600',
+          textAlign: 'center',
+          marginBottom: 16,
+          letterSpacing: 1
+        }}>
+          Configuration Summary
+        </Text>
+
+        {/* Selected Time Display */}
+        <Text style={{
+          color: '#F5F5DC',
+          fontSize: 28,
+          fontWeight: 'bold',
+          textAlign: 'center',
+          marginBottom: 32,
+          textShadowColor: 'rgba(135, 206, 235, 0.3)',
+          textShadowOffset: { width: 0, height: 0 },
+          textShadowRadius: 15
+        }}>
+          {timeIntervals[selectedIndex]}
+        </Text>
+
+        {/* Start Button - Refined design */}
         <TouchableOpacity
-          onPress={handleStartTimer}
+          onPress={onStartCountdown}
           style={{
-            backgroundColor: '#F5F5DC',
-            borderRadius: 20,
-            paddingVertical: 16,
-            marginHorizontal: 24,
-            marginBottom: 32,
-            shadowColor: '#F5F5DC',
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.3,
-            shadowRadius: 16,
-            elevation: 8
+            backgroundColor: '#121212',
+            borderRadius: 16,
+            paddingVertical: 18,
+            paddingHorizontal: 32,
+            borderWidth: 1.5,
+            borderColor: '#87CEEB',
+            shadowColor: '#87CEEB',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.4,
+            shadowRadius: 20,
+            elevation: 8,
+            width: '100%',
+            maxWidth: 300
           }}
         >
           <Text style={{
-            color: '#000000',
+            color: '#F5F5DC',
             fontSize: 18,
             fontWeight: 'bold',
             textAlign: 'center',

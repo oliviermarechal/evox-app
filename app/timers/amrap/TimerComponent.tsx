@@ -15,13 +15,11 @@ interface TimerComponentProps {
 
 export default function TimerComponent({ config, onResetTimer }: TimerComponentProps) {
   const { isLandscape } = useOrientation();
-  // Props communes pour les deux templates
   const commonProps = {
     config,
     onResetTimer
   };
 
-  // Orchestration des templates
   if (isLandscape) {
     return <LandscapeTimer {...commonProps} />;
   } else {

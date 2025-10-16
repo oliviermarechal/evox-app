@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import FireEffect from '@/components/FireEffect';
 import SlideToAction from '@/components/SlideToAction';
 
 interface EMOMConfig {
@@ -171,8 +170,6 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
-          {/* Effet de flamme SVG */}
-          <FireEffect isVisible={isOnFire} size={200} timerPosition={timerPosition} />
           
           <View 
             style={{
@@ -389,9 +386,6 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
           }}>
             TIME REMAINING
           </Text>
-          
-          {/* Effet de flamme SVG */}
-          <FireEffect isVisible={isOnFire} size={280} timerPosition={timerPosition} />
           
           {/* Timer Circle */}
           <View 

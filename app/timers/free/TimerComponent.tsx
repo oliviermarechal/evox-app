@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import FireEffect from '@/components/FireEffect';
 import SlideToAction from '@/components/SlideToAction';
 
 interface TimerComponentProps {
@@ -16,10 +15,6 @@ export default function TimerComponent({ isLandscape, onResetTimer }: TimerCompo
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [finalTime, setFinalTime] = useState<string | null>(null);
-  const [isOnFire, setIsOnFire] = useState(false);
-  const [timerPosition, setTimerPosition] = useState<{ x: number; y: number; width: number; height: number } | undefined>(undefined);
-
-  // Slider logic supprimé - utilise maintenant SlideToAction
 
   const intervalRef = useRef<any>(null);
 
@@ -61,15 +56,11 @@ export default function TimerComponent({ isLandscape, onResetTimer }: TimerCompo
     setIsPaused(false);
     setTotalMilliseconds(0);
     setFinalTime(null);
-    setIsOnFire(false);
-    // Slider logic supprimé
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
     onResetTimer();
   };
-
-  // Slider logic supprimé - utilise maintenant SlideToAction
 
   useEffect(() => {
     return () => {
@@ -79,7 +70,6 @@ export default function TimerComponent({ isLandscape, onResetTimer }: TimerCompo
     };
   }, []);
 
-  // Auto-start timer
   useEffect(() => {
     const timer = setTimeout(() => {
       startTimer();
@@ -90,7 +80,6 @@ export default function TimerComponent({ isLandscape, onResetTimer }: TimerCompo
   if (isLandscape && (isRunning || isPaused) && !finalTime) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-        {/* Header avec flèche de retour */}
         <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16 }}>
           <TouchableOpacity onPress={() => router.back()}>
             <FontAwesome name="arrow-left" size={24} color="#87CEEB" />
@@ -107,29 +96,22 @@ export default function TimerComponent({ isLandscape, onResetTimer }: TimerCompo
         </View>
         
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
-          {/* Effet de flamme SVG */}
-          <FireEffect isVisible={isOnFire} size={200} timerPosition={timerPosition} />
-          
           <View 
             style={{
               width: 200,
               height: 200,
               borderRadius: 100,
               borderWidth: 8,
-              borderColor: isOnFire ? '#FF4500' : (isPaused ? '#87CEEB' : '#FFD700'),
+              borderColor: isPaused ? '#87CEEB' : '#FFD700',
               backgroundColor: '#000000',
               alignItems: 'center',
               justifyContent: 'center',
-              shadowColor: isOnFire ? '#FF4500' : (isPaused ? '#87CEEB' : '#FFD700'),
+              shadowColor: isPaused ? '#87CEEB' : '#FFD700',
               shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: isOnFire ? 0.9 : 0.6,
-              shadowRadius: isOnFire ? 30 : 20,
-              elevation: isOnFire ? 25 : 15,
+              shadowOpacity: 0.6,
+              shadowRadius: 20,
+              elevation: 15,
               marginBottom: 32
-            }}
-            onLayout={(event) => {
-              const { x, y, width, height } = event.nativeEvent.layout;
-              setTimerPosition({ x, y, width, height });
             }}
           >
             <Text style={{
@@ -177,7 +159,6 @@ export default function TimerComponent({ isLandscape, onResetTimer }: TimerCompo
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-      {/* Header avec flèche de retour */}
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16 }}>
         <TouchableOpacity onPress={() => router.back()}>
           <FontAwesome name="arrow-left" size={24} color="#87CEEB" />
@@ -215,9 +196,6 @@ export default function TimerComponent({ isLandscape, onResetTimer }: TimerCompo
             TIME ELAPSED
           </Text>
           
-          {/* Effet de flamme SVG */}
-          <FireEffect isVisible={isOnFire} size={280} timerPosition={timerPosition} />
-          
           {/* Timer Circle */}
           <View 
             style={{
@@ -225,20 +203,16 @@ export default function TimerComponent({ isLandscape, onResetTimer }: TimerCompo
               height: 280,
               borderRadius: 140,
               borderWidth: 12,
-              borderColor: isOnFire ? '#FF4500' : (isPaused ? '#87CEEB' : '#FFD700'),
+              borderColor: isPaused ? '#87CEEB' : '#FFD700',
               backgroundColor: '#000000',
               alignItems: 'center',
               justifyContent: 'center',
-              shadowColor: isOnFire ? '#FF4500' : (isPaused ? '#87CEEB' : '#FFD700'),
+              shadowColor: isPaused ? '#87CEEB' : '#FFD700',
               shadowOffset: { width: 0, height: 12 },
-              shadowOpacity: isOnFire ? 0.9 : 0.6,
-              shadowRadius: isOnFire ? 35 : 25,
-              elevation: isOnFire ? 30 : 20,
+              shadowOpacity: 0.6,
+              shadowRadius: 25,
+              elevation: 20,
               marginBottom: 16
-            }}
-            onLayout={(event) => {
-              const { x, y, width, height } = event.nativeEvent.layout;
-              setTimerPosition({ x, y, width, height });
             }}
           >
             <Text style={{

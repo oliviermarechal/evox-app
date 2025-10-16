@@ -29,6 +29,9 @@ dependencies:
   expo-haptics:
     specifier: ^15.0.7
     version: 15.0.7(expo@54.0.13)
+  expo-linear-gradient:
+    specifier: ~15.0.7
+    version: 15.0.7(expo@54.0.13)(react-native@0.81.4)(react@19.1.0)
   expo-linking:
     specifier: ~8.0.8
     version: 8.0.8(expo@54.0.13)(react-native@0.81.4)(react@19.1.0)
@@ -47,6 +50,9 @@ dependencies:
   expo-web-browser:
     specifier: ~15.0.8
     version: 15.0.8(expo@54.0.13)(react-native@0.81.4)
+  lucide-react-native:
+    specifier: ^0.545.0
+    version: 0.545.0(react-native-svg@15.12.1)(react-native@0.81.4)(react@19.1.0)
   nativewind:
     specifier: ^4.2.1
     version: 4.2.1(react-native-reanimated@4.1.2)(react-native-safe-area-context@5.6.1)(react-native-svg@15.12.1)(react-native@0.81.4)(react@19.1.0)(tailwindcss@3.4.18)
@@ -3609,6 +3615,18 @@ packages:
       react: 19.1.0
     dev: false
 
+  /expo-linear-gradient@15.0.7(expo@54.0.13)(react-native@0.81.4)(react@19.1.0):
+    resolution: {integrity: sha512-yF+y+9Shpr/OQFfy/wglB/0bykFMbwHBTuMRa5Of/r2P1wbkcacx8rg0JsUWkXH/rn2i2iWdubyqlxSJa3ggZA==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
+    dependencies:
+      expo: 54.0.13(@babel/core@7.28.4)(@expo/metro-runtime@6.1.2)(expo-router@6.0.11)(react-native@0.81.4)(react@19.1.0)
+      react: 19.1.0
+      react-native: 0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0)
+    dev: false
+
   /expo-linking@8.0.8(expo@54.0.13)(react-native@0.81.4)(react@19.1.0):
     resolution: {integrity: sha512-MyeMcbFDKhXh4sDD1EHwd0uxFQNAc6VCrwBkNvvvufUsTYFq3glTA9Y8a+x78CPpjNqwNAamu74yIaIz7IEJyg==}
     peerDependencies:
@@ -4727,6 +4745,18 @@ packages:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
     dependencies:
       yallist: 3.1.1
+    dev: false
+
+  /lucide-react-native@0.545.0(react-native-svg@15.12.1)(react-native@0.81.4)(react@19.1.0):
+    resolution: {integrity: sha512-v9MC1CJ5jJkBbGvO+jrq9Iqe58pS8FvmdIO1NEr7mzQEx7E2VGfXkl1iaJsKpDSqofYhv4Xrks2I2ewF66HIDA==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-native: '*'
+      react-native-svg: ^12.0.0 || ^13.0.0 || ^14.0.0 || ^15.0.0
+    dependencies:
+      react: 19.1.0
+      react-native: 0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0)
+      react-native-svg: 15.12.1(react-native@0.81.4)(react@19.1.0)
     dev: false
 
   /makeerror@1.0.12:

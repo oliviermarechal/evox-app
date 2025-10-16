@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FireEffect from '@/components/FireEffect';
-import SlideToAction from '@/components/SlideToAction';
+import { FontAwesome } from '@expo/vector-icons';
+import { AddRoundButton } from '@/components/AddRoundButton';
+import { LandscapeTimeDisplay } from '@/components/LandscapeTimeDisplay';
+import { AMRAPFinalScreen } from '@/components/AMRAPFinalScreen';
 
 interface AMRAPConfig {
   minutes: number;
@@ -15,13 +17,12 @@ interface LandscapeTimerProps {
 }
 
 export default function LandscapeTimer({ config, onResetTimer }: LandscapeTimerProps) {
-  const [totalMilliseconds, setTotalMilliseconds] = useState(config.minutes * 60 * 1000 + config.seconds * 1000);
+  const [remainingMilliseconds, setRemainingMilliseconds] = useState(config.minutes * 60 * 1000 + config.seconds * 1000);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentRound, setCurrentRound] = useState(1);
   const [finalTime, setFinalTime] = useState<string | null>(null);
   const [isOnFire, setIsOnFire] = useState(false);
-  const [timerPosition, setTimerPosition] = useState<{ x: number; y: number; width: number; height: number } | undefined>(undefined);
 
   const intervalRef = useRef<any>(null);
 
@@ -33,36 +34,40 @@ export default function LandscapeTimer({ config, onResetTimer }: LandscapeTimerP
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
   };
 
+
   const startTimer = () => {
     if (!isRunning && !isPaused) {
       setIsRunning(true);
       intervalRef.current = setInterval(() => {
-        setTotalMilliseconds(prev => {
-          if (prev <= 10) {
-            // Timer finished
+        setRemainingMilliseconds(prev => {
+          const newRemaining = prev - 10;
+          if (newRemaining <= 0) {
+            // Timer terminé
             clearInterval(intervalRef.current);
             setIsRunning(false);
             setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000));
             setIsOnFire(true);
+            
             return 0;
           }
-          return prev - 10;
+          return newRemaining;
         });
       }, 10);
     } else if (isPaused) {
       setIsPaused(false);
       setIsRunning(true);
       intervalRef.current = setInterval(() => {
-        setTotalMilliseconds(prev => {
-          if (prev <= 10) {
-            // Timer finished
+        setRemainingMilliseconds(prev => {
+          const newRemaining = prev - 10;
+          if (newRemaining <= 0) {
             clearInterval(intervalRef.current);
             setIsRunning(false);
             setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000));
             setIsOnFire(true);
+            
             return 0;
           }
-          return prev - 10;
+          return newRemaining;
         });
       }, 10);
     }
@@ -81,7 +86,7 @@ export default function LandscapeTimer({ config, onResetTimer }: LandscapeTimerP
   const resetTimer = () => {
     setIsRunning(false);
     setIsPaused(false);
-    setTotalMilliseconds(config.minutes * 60 * 1000 + config.seconds * 1000);
+    setRemainingMilliseconds(config.minutes * 60 * 1000 + config.seconds * 1000);
     setCurrentRound(1);
     setFinalTime(null);
     setIsOnFire(false);
@@ -99,7 +104,6 @@ export default function LandscapeTimer({ config, onResetTimer }: LandscapeTimerP
     };
   }, []);
 
-  // Auto-start timer
   useEffect(() => {
     const timer = setTimeout(() => {
       startTimer();
@@ -109,278 +113,149 @@ export default function LandscapeTimer({ config, onResetTimer }: LandscapeTimerP
 
   if (finalTime) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
-          {/* Final Time Display - Optimized for distance */}
-          <View style={{
-            backgroundColor: '#1A1A1A',
-            padding: 48,
-            borderRadius: 20,
-            alignItems: 'center',
-            borderWidth: 4,
-            borderColor: '#FFD700',
-            shadowColor: '#FFD700',
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.4,
-            shadowRadius: 16,
-            elevation: 12,
-            minWidth: 400,
-          }}>
-            <Text style={{
-              color: '#FFD700',
-              fontSize: 28,
-              fontWeight: 'bold',
-              marginBottom: 16,
-              textAlign: 'center'
-            }}>
-              AMRAP COMPLETED!
-            </Text>
-            <Text style={{
-              color: '#FFD700',
-              fontSize: 48,
-              fontWeight: 'bold',
-              textAlign: 'center'
-            }}>
-              {finalTime}
-            </Text>
-            <Text style={{
-              color: '#FFFFFF',
-              fontSize: 18,
-              textAlign: 'center',
-              marginTop: 16,
-              opacity: 0.8
-            }}>
-              Round {currentRound} completed
-            </Text>
-          </View>
-
-          {/* Reset Button */}
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#FF4500',
-              paddingHorizontal: 32,
-              paddingVertical: 16,
-              borderRadius: 12,
-              marginTop: 32,
-            }}
-            onPress={resetTimer}
-          >
-            <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 18 }}>RESET</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <AMRAPFinalScreen
+        finalTime={finalTime}
+        currentRound={currentRound}
+        timeCap={`${config.minutes}:${config.seconds.toString().padStart(2, '0')}`}
+        onReset={resetTimer}
+        isLandscape={true}
+      />
     );
   }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
+      {/* Background simple */}
       <View style={{
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#87CEEB15',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         backgroundColor: '#0F0F10',
+      }} />
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        zIndex: 20,
       }}>
-        <Text style={{
-          color: '#87CEEB',
-          fontSize: 20,
-          fontWeight: 'bold',
-          letterSpacing: 1.5,
-          marginBottom: 2,
-        }}>
-          AMRAP TIMER
-        </Text>
-        <Text style={{
-          color: '#FFFFFF',
-          fontSize: 11,
-          opacity: 0.8,
-          letterSpacing: 0.5,
-        }}>
-          Round {currentRound} • {isPaused ? 'PAUSED' : isRunning ? 'RUNNING' : 'READY'}
-        </Text>
+        <TouchableOpacity 
+          onPress={onResetTimer}
+          style={{
+            width: 44,
+            height: 44,
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 25,
+          }}
+        >
+          <FontAwesome name="arrow-left" size={24} color="#87CEEB" />
+        </TouchableOpacity>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={{ 
+            color: 'rgba(135, 206, 235, 0.8)', 
+            fontSize: 20, 
+            fontWeight: 'bold', 
+            letterSpacing: 1.5,
+            textShadowColor: 'rgba(135, 206, 235, 0.3)',
+            textShadowOffset: { width: 0, height: 2 },
+            textShadowRadius: 4,
+          }}>
+            AMRAP TIMER
+          </Text>
+          <Text style={{ 
+            color: '#F5F5DC', 
+            fontSize: 11, 
+            opacity: 0.8, 
+            letterSpacing: 0.5,
+            textShadowColor: 'rgba(245, 245, 220, 0.3)',
+            textShadowOffset: { width: 0, height: 1 },
+            textShadowRadius: 2,
+          }}>
+            Round {currentRound} • {isPaused ? 'PAUSED' : isRunning ? 'RUNNING' : 'READY'}
+          </Text>
+        </View>
+        <View style={{ width: 44 }} />
       </View>
 
-      {/* Layout audacieux - Timer DOMINANT au centre, contrôles discrets sur les côtés */}
       <View style={{ 
         flex: 1, 
-        flexDirection: 'row', 
-        paddingHorizontal: 16, 
-        paddingVertical: 16,
-        justifyContent: 'space-between',
+        flexDirection: 'row',
+        paddingHorizontal: 32,
+        paddingVertical: 24,
         alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 5,
       }}>
         
-        <View style={{ 
-          flex: 0.45,
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingTop: 50,
-        }}>
-          
-          <View style={{
-            backgroundColor: '#1A1A1A',
-            padding: 20,
-            borderRadius: 20,
-            borderWidth: 2,
-            borderColor: '#87CEEB40',
-            shadowColor: '#87CEEB',
-            shadowOffset: { width: 0, height: 15 },
-            shadowOpacity: 0.3,
-            shadowRadius: 20,
-            elevation: 15,
+        <TouchableOpacity
+          onPress={isPaused ? startTimer : pauseTimer}
+          style={{
+            flex: 1,
             alignItems: 'center',
-            width: '100%',
-            maxWidth: 280,
-          }}>
-            
-            {/* Section Rounds */}
-            <View style={{ width: '100%', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{
-                color: '#87CEEB',
-                fontSize: 14,
-                fontWeight: 'bold',
-                letterSpacing: 1,
-                marginBottom: 6,
-              }}>
-                AMRAP ROUND
-              </Text>
-              <Text style={{
-                color: '#FFFFFF',
-                fontSize: 24,
-                fontWeight: 'bold',
-                marginBottom: 12,
-                textAlign: 'center',
-              }}>
-                Round {currentRound}
-              </Text>
-              
-              {/* Bouton Round + */}
-              <TouchableOpacity
-                style={{
-                  backgroundColor: '#87CEEB',
-                  paddingHorizontal: 16,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  shadowColor: '#87CEEB',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 8,
-                  elevation: 8,
-                  width: '100%',
-                }}
-                onPress={() => setCurrentRound(prev => prev + 1)}
-              >
-                <Text style={{ 
-                  color: '#000000', 
-                  fontWeight: 'bold', 
-                  fontSize: 12, 
-                  textAlign: 'center',
-                  letterSpacing: 0.5,
-                }}>
-                  +1 ROUND
-                </Text>
-              </TouchableOpacity>
-            </View>
+            justifyContent: 'center',
+            paddingHorizontal: 48,
+            paddingVertical: 120,
+            minHeight: 400,
+            position: 'relative',
+          }}
+        >
+          {/* LandscapeTimeDisplay réutilisable */}
+          <LandscapeTimeDisplay 
+            timeString={formatTime(remainingMilliseconds)}
+            isPaused={isPaused}
+            isOnFire={isOnFire}
+          />
+          
+        </TouchableOpacity>
 
-            {/* Séparateur élégant */}
-            <View style={{
-              width: '60%',
-              height: 1,
-              backgroundColor: '#87CEEB30',
-              marginBottom: 16,
-            }} />
-
-            {/* Section Pause */}
-            <View style={{ width: '100%', alignItems: 'center', marginBottom: 16 }}>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: isPaused ? '#F5F5DC' : '#87CEEB',
-                  paddingHorizontal: 20,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  shadowColor: isPaused ? '#F5F5DC' : '#87CEEB',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 8,
-                  elevation: 8,
-                  width: '100%',
-                }}
-                onPress={isPaused ? startTimer : pauseTimer}
-              >
-                <Text style={{ 
-                  color: isPaused ? '#000000' : '#FFFFFF', 
-                  fontWeight: 'bold', 
-                  fontSize: 12, 
-                  textAlign: 'center',
-                  letterSpacing: 0.5,
-                }}>
-                  {isPaused ? 'RESUME' : 'PAUSE'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Séparateur élégant */}
-            <View style={{
-              width: '60%',
-              height: 1,
-              backgroundColor: '#87CEEB30',
-              marginBottom: 16,
-            }} />
-
-            {/* Section SlideToAction */}
-            <View style={{ width: '100%', alignItems: 'center' }}>
-              <SlideToAction
-                label="SLIDE TO STOP"
-                onSlideComplete={resetTimer}
-                width={240}
-              />
-            </View>
-          </View>
-        </View>
+        <View style={{
+          width: 1,
+          height: 200,
+          backgroundColor: 'rgba(135, 206, 235, 0.08)',
+          alignSelf: 'center',
+          marginLeft: 15
+        }} />
 
         <View style={{ 
-          flex: 0.4, 
-          justifyContent: 'center', 
           alignItems: 'center',
-          paddingHorizontal: 20,
+          justifyContent: 'center',
+          minWidth: 160,
         }}>
-          <View 
-            style={{
-              width: 280,
-              height: 280,
-              borderRadius: 140,
-              borderWidth: 8,
-              borderColor: isOnFire ? '#FF4500' : (isPaused ? '#F5F5DC' : '#87CEEB'),
-              backgroundColor: '#000000',
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: isOnFire ? '#FF4500' : (isPaused ? '#F5F5DC' : '#87CEEB'),
-              shadowOffset: { width: 0, height: 20 },
-              shadowOpacity: isOnFire ? 1.0 : 0.9,
-              shadowRadius: isOnFire ? 50 : 40,
-              elevation: isOnFire ? 50 : 35,
-            }}
-            onLayout={(event) => {
-              const { x, y, width, height } = event.nativeEvent.layout;
-              setTimerPosition({ x, y, width, height });
-            }}
-          >
-            <FireEffect isVisible={isOnFire} size={280} timerPosition={timerPosition} />
-            
+          <View style={{
+            alignItems: 'center',
+            marginBottom: 32,
+          }}>
             <Text style={{
-              color: isPaused ? '#F5F5DC' : '#87CEEB',
-              fontSize: 52,
-              fontWeight: 'bold',
+              color: 'rgba(135, 206, 235, 0.8)',
+              fontSize: 11,
+              fontWeight: '500',
+              letterSpacing: 1,
               textAlign: 'center',
-              textShadowColor: isPaused ? '#F5F5DC' : '#87CEEB',
-              textShadowOffset: { width: 0, height: 6 },
-              textShadowRadius: 12,
-              letterSpacing: 2,
+              marginBottom: 8,
+              textTransform: 'uppercase',
             }}>
-              {formatTime(totalMilliseconds)}
+              Round
+            </Text>
+            <Text style={{
+              color: '#F5F5DC',
+              fontSize: 58,
+              fontWeight: '600',
+              textAlign: 'center',
+              textShadowColor: 'rgba(245, 245, 220, 0.3)',
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 20,
+              letterSpacing: -1,
+              fontFamily: 'monospace',
+              lineHeight: 58,
+            }}>
+              {currentRound}
             </Text>
           </View>
+
+          <AddRoundButton onPress={() => setCurrentRound(prev => prev + 1)} />
         </View>
       </View>
     </SafeAreaView>

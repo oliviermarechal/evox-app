@@ -36,18 +36,16 @@ const TIME_INTERVALS = generateTimeIntervals();
 
 export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, initialSeconds = 0 }: ConfigComponentProps) {
   const { isLandscape } = useOrientation();
-  // Find initial index based on initial time, default to 10:00 if no initial values
   const getInitialIndex = useCallback(() => {
-    // If no initial values provided, default to 10:00
     if (initialMinutes === 0 && initialSeconds === 0) {
       return TIME_INTERVALS.findIndex(interval => interval === '10:00');
     }
     
     const totalSeconds = initialMinutes * 60 + initialSeconds;
-    const targetInterval = Math.ceil(totalSeconds / 15) * 15; // Round up to nearest 15 seconds
+    const targetInterval = Math.ceil(totalSeconds / 15) * 15;
     
-    if (targetInterval < 15) return 0; // 0:15
-    if (targetInterval > 1200) return TIME_INTERVALS.length - 1; // 20:00
+    if (targetInterval < 15) return 0;
+    if (targetInterval > 1200) return TIME_INTERVALS.length - 1;
     
     const minutes = Math.floor(targetInterval / 60);
     const seconds = targetInterval % 60;
@@ -68,7 +66,6 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
     onStartCountdown({ minutes, seconds });
   };
 
-  // Props communes pour les deux templates
   const commonProps = {
     onStartCountdown: handleStartTimer,
     selectedIndex,
@@ -78,7 +75,6 @@ export default function ConfigComponent({ onStartCountdown, initialMinutes = 0, 
     initialSeconds
   };
 
-  // Orchestration des templates
   if (isLandscape) {
     return <LandscapeConfig {...commonProps} />;
   } else {

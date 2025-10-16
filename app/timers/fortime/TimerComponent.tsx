@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FireEffect from '@/components/FireEffect';
 import SlideToAction from '@/components/SlideToAction';
 
 interface ForTimeConfig {
@@ -20,8 +19,6 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [finalTime, setFinalTime] = useState<string | null>(null);
-  const [isOnFire, setIsOnFire] = useState(false);
-  const [timerPosition, setTimerPosition] = useState<{ x: number; y: number; width: number; height: number } | undefined>(undefined);
 
   // Slider logic supprimé - utilise maintenant SlideToAction
 
@@ -45,7 +42,6 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
             clearInterval(intervalRef.current);
             setIsRunning(false);
             setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000));
-            setIsOnFire(true);
             return 0;
           }
           return prev - 10;
@@ -61,7 +57,6 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
             clearInterval(intervalRef.current);
             setIsRunning(false);
             setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000));
-            setIsOnFire(true);
             return 0;
           }
           return prev - 10;
@@ -84,16 +79,12 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
     setIsRunning(false);
     setIsPaused(false);
     setTotalMilliseconds(config.minutes * 60 * 1000 + config.seconds * 1000);
-    setFinalTime(null);
-    setIsOnFire(false);
-    // Slider logic supprimé
+    setFinalTime(null); 
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
     onResetTimer();
   };
-
-  // Slider logic supprimé - utilise maintenant SlideToAction
 
   useEffect(() => {
     return () => {
@@ -115,8 +106,6 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
-          {/* Effet de flamme SVG */}
-          <FireEffect isVisible={isOnFire} size={200} timerPosition={timerPosition} />
           
           <View 
             style={{
@@ -124,20 +113,16 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
               height: 200,
               borderRadius: 100,
               borderWidth: 8,
-              borderColor: isOnFire ? '#FF4500' : (isPaused ? '#87CEEB' : '#FFD700'),
+              borderColor: isPaused ? '#87CEEB' : '#FFD700',
               backgroundColor: '#000000',
               alignItems: 'center',
               justifyContent: 'center',
-              shadowColor: isOnFire ? '#FF4500' : (isPaused ? '#87CEEB' : '#FFD700'),
+              shadowColor: isPaused ? '#87CEEB' : '#FFD700',
               shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: isOnFire ? 0.9 : 0.6,
-              shadowRadius: isOnFire ? 30 : 20,
-              elevation: isOnFire ? 25 : 15,
+              shadowOpacity: 0.6,
+              shadowRadius: 20,
+              elevation: 15,
               marginBottom: 32
-            }}
-            onLayout={(event) => {
-              const { x, y, width, height } = event.nativeEvent.layout;
-              setTimerPosition({ x, y, width, height });
             }}
           >
             <Text style={{
@@ -207,9 +192,6 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
             TIME REMAINING
           </Text>
           
-          {/* Effet de flamme SVG */}
-          <FireEffect isVisible={isOnFire} size={280} timerPosition={timerPosition} />
-          
           {/* Timer Circle */}
           <View 
             style={{
@@ -217,20 +199,16 @@ export default function TimerComponent({ config, isLandscape, onResetTimer }: Ti
               height: 280,
               borderRadius: 140,
               borderWidth: 12,
-              borderColor: isOnFire ? '#FF4500' : (isPaused ? '#87CEEB' : '#FFD700'),
+              borderColor: isPaused ? '#87CEEB' : '#FFD700',
               backgroundColor: '#000000',
               alignItems: 'center',
               justifyContent: 'center',
-              shadowColor: isOnFire ? '#FF4500' : (isPaused ? '#87CEEB' : '#FFD700'),
+              shadowColor: isPaused ? '#87CEEB' : '#FFD700',
               shadowOffset: { width: 0, height: 12 },
-              shadowOpacity: isOnFire ? 0.9 : 0.6,
-              shadowRadius: isOnFire ? 35 : 25,
-              elevation: isOnFire ? 30 : 20,
+              shadowOpacity: 0.6,
+              shadowRadius: 25,
+              elevation: 20,
               marginBottom: 16
-            }}
-            onLayout={(event) => {
-              const { x, y, width, height } = event.nativeEvent.layout;
-              setTimerPosition({ x, y, width, height });
             }}
           >
             <Text style={{
