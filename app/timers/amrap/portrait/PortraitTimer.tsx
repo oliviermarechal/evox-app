@@ -2,9 +2,9 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
-import { AddRoundButton } from '@/components/AddRoundButton';
-import { PortraitTimeDisplay } from '@/components/PortraitTimeDisplay';
-import { AMRAPFinalScreen } from '@/components/AMRAPFinalScreen';
+import { AddRoundButton } from '@/components/timers/AddRoundButton';
+import { PortraitTimeDisplay } from '@/components/timers/displays/PortraitTimeDisplay';
+import { AMRAPFinalScreen } from '@/components/timers/screens/AMRAPFinalScreen';
 
 interface AMRAPConfig {
   minutes: number;

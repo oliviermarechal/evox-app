@@ -1,40 +1,32 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export interface AMRAPConfig {
-  minutes: number;
-  seconds: number;
-}
-
-export interface AMRAPTimerState {
-  remainingMilliseconds: number;
+export interface FreeTimerState {
+  totalMilliseconds: number;
   isRunning: boolean;
   isPaused: boolean;
-  currentRound: number;
   finalTime: string | null;
   isOnFire: boolean;
+  currentRound: number;
   timerPosition: { x: number; y: number; width: number; height: number } | undefined;
-  hasStarted: boolean;
 }
 
-export interface AMRAPTimerActions {
+export interface FreeTimerActions {
   startTimer: () => void;
   pauseTimer: () => void;
   resetTimer: () => void;
   incrementRound: () => void;
   setTimerPosition: (position: { x: number; y: number; width: number; height: number }) => void;
+  finishTimer: () => void;
 }
 
-export function useAMRAPTimer(config: AMRAPConfig) {
-  const [remainingMilliseconds, setRemainingMilliseconds] = useState(
-    config.minutes * 60 * 1000 + config.seconds * 1000
-  );
+export function useFreeTimer() {
+  const [totalMilliseconds, setTotalMilliseconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [currentRound, setCurrentRound] = useState(1);
   const [finalTime, setFinalTime] = useState<string | null>(null);
   const [isOnFire, setIsOnFire] = useState(false);
+  const [currentRound, setCurrentRound] = useState(0);
   const [timerPosition, setTimerPosition] = useState<{ x: number; y: number; width: number; height: number } | undefined>(undefined);
-  const [hasStarted, setHasStarted] = useState(false);
   const hasAutoStarted = useRef(false);
 
   const intervalRef = useRef<any>(null);
@@ -50,38 +42,32 @@ export function useAMRAPTimer(config: AMRAPConfig) {
   const startTimer = useCallback(() => {
     if (!isRunning && !isPaused) {
       setIsRunning(true);
-      setHasStarted(true);
+      setTotalMilliseconds(0); // Reset to 0 when starting fresh
       intervalRef.current = setInterval(() => {
-        setRemainingMilliseconds(prev => {
-          const newRemaining = prev - 10;
-          if (newRemaining <= 0) {
-            clearInterval(intervalRef.current);
-            setIsRunning(false);
-            setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000));
+        setTotalMilliseconds(prev => {
+          const newTotal = prev + 10;
+          // Effet "on fire" après 1 heure
+          if (newTotal >= 3600000 && !isOnFire) {
             setIsOnFire(true);
-            return 0;
           }
-          return newRemaining;
+          return newTotal;
         });
       }, 10);
     } else if (isPaused) {
       setIsPaused(false);
       setIsRunning(true);
       intervalRef.current = setInterval(() => {
-        setRemainingMilliseconds(prev => {
-          const newRemaining = prev - 10;
-          if (newRemaining <= 0) {
-            clearInterval(intervalRef.current);
-            setIsRunning(false);
-            setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000));
+        setTotalMilliseconds(prev => {
+          const newTotal = prev + 10;
+          // Effet "on fire" après 1 heure
+          if (newTotal >= 3600000 && !isOnFire) {
             setIsOnFire(true);
-            return 0;
           }
-          return newRemaining;
+          return newTotal;
         });
       }, 10);
     }
-  }, [isRunning, isPaused, config.minutes, config.seconds, formatTime]);
+  }, [isRunning, isPaused, isOnFire]);
 
   const pauseTimer = useCallback(() => {
     if (isRunning) {
@@ -93,22 +79,30 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     }
   }, [isRunning]);
 
-  const resetTimer = useCallback(() => {
-    setIsRunning(false);
-    setIsPaused(false);
-    setRemainingMilliseconds(config.minutes * 60 * 1000 + config.seconds * 1000);
-    setCurrentRound(1);
-    setFinalTime(null);
-    setIsOnFire(false);
-    setHasStarted(false);
-    hasAutoStarted.current = false; // Reset pour permettre le redémarrage auto
+  const incrementRound = useCallback(() => {
+    setCurrentRound(prev => prev + 1);
+  }, []);
+
+  const finishTimer = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-  }, [config.minutes, config.seconds]);
+    setIsRunning(false);
+    setIsPaused(false);
+    setFinalTime(formatTime(totalMilliseconds));
+  }, [totalMilliseconds, formatTime]);
 
-  const incrementRound = useCallback(() => {
-    setCurrentRound(prev => prev + 1);
+  const resetTimer = useCallback(() => {
+    setIsRunning(false);
+    setIsPaused(false);
+    setTotalMilliseconds(0);
+    setFinalTime(null);
+    setIsOnFire(false);
+    setCurrentRound(0);
+    hasAutoStarted.current = false;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
   }, []);
 
   // Auto-start timer when component mounts (only once)
@@ -131,23 +125,23 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     };
   }, []);
 
-  const state: AMRAPTimerState = {
-    remainingMilliseconds,
+  const state: FreeTimerState = {
+    totalMilliseconds,
     isRunning,
     isPaused,
-    currentRound,
     finalTime,
     isOnFire,
+    currentRound,
     timerPosition,
-    hasStarted,
   };
 
-  const actions: AMRAPTimerActions = {
+  const actions: FreeTimerActions = {
     startTimer,
     pauseTimer,
     resetTimer,
     incrementRound,
     setTimerPosition,
+    finishTimer,
   };
 
   return { state, actions, formatTime };

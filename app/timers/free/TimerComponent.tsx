@@ -1,302 +1,48 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import SlideToAction from '@/components/SlideToAction';
+import React from 'react';
+import { useOrientation } from '@/hooks/useOrientation';
+import { useFreeTimer } from '@/hooks/free/useFreeTimer';
+import PortraitTimer from './portrait/PortraitTimer';
+import LandscapeTimer from './landscape/LandscapeTimer';
+import { FreeFinalScreen } from '@/components/timers/screens/FreeFinalScreen';
 
 interface TimerComponentProps {
-  isLandscape: boolean;
   onResetTimer: () => void;
 }
 
-export default function TimerComponent({ isLandscape, onResetTimer }: TimerComponentProps) {
-  const [totalMilliseconds, setTotalMilliseconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [finalTime, setFinalTime] = useState<string | null>(null);
+export default function TimerComponent({ onResetTimer }: TimerComponentProps) {
+  const { isLandscape } = useOrientation();
+  const { state, actions, formatTime } = useFreeTimer();
 
-  const intervalRef = useRef<any>(null);
-
-  const formatTime = (ms: number): string => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    const centiseconds = Math.floor((ms % 1000) / 10);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
-  };
-
-  const startTimer = () => {
-    if (!isRunning && !isPaused) {
-      setIsRunning(true);
-      intervalRef.current = setInterval(() => {
-        setTotalMilliseconds(prev => prev + 10);
-      }, 10);
-    } else if (isPaused) {
-      setIsPaused(false);
-      setIsRunning(true);
-      intervalRef.current = setInterval(() => {
-        setTotalMilliseconds(prev => prev + 10);
-      }, 10);
-    }
-  };
-
-  const pauseTimer = () => {
-    if (isRunning) {
-      setIsRunning(false);
-      setIsPaused(true);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
-  };
-
-  const resetTimer = () => {
-    setIsRunning(false);
-    setIsPaused(false);
-    setTotalMilliseconds(0);
-    setFinalTime(null);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    onResetTimer();
-  };
-
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      startTimer();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isLandscape && (isRunning || isPaused) && !finalTime) {
+  // Afficher l'écran final si le timer est terminé
+  if (state.finalTime) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16 }}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <FontAwesome name="arrow-left" size={24} color="#87CEEB" />
-          </TouchableOpacity>
-          <View style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ color: '#FFD700', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 }}>
-              FREE TIMER
-            </Text>
-            <Text style={{ color: '#FFFFFF', fontSize: 14, marginTop: 4, opacity: 0.8 }}>
-              Stopwatch
-            </Text>
-          </View>
-          <View style={{ width: 24 }} />
-        </View>
-        
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
-          <View 
-            style={{
-              width: 200,
-              height: 200,
-              borderRadius: 100,
-              borderWidth: 8,
-              borderColor: isPaused ? '#87CEEB' : '#FFD700',
-              backgroundColor: '#000000',
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: isPaused ? '#87CEEB' : '#FFD700',
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.6,
-              shadowRadius: 20,
-              elevation: 15,
-              marginBottom: 32
-            }}
-          >
-            <Text style={{
-              color: isPaused ? '#87CEEB' : '#FFD700',
-              fontSize: 32,
-              fontWeight: 'bold',
-              textAlign: 'center',
-            }}>
-              {formatTime(totalMilliseconds)}
-            </Text>
-          </View>
-
-          {/* Control Buttons */}
-          <View style={{ flexDirection: 'row', gap: 16 }}>
-            <TouchableOpacity
-              style={{
-                backgroundColor: isPaused ? '#FFD700' : '#87CEEB',
-                paddingHorizontal: 24,
-                paddingVertical: 12,
-                borderRadius: 8,
-              }}
-              onPress={isPaused ? startTimer : pauseTimer}
-            >
-              <Text style={{ color: '#000000', fontWeight: 'bold' }}>
-                {isPaused ? 'RESUME' : 'PAUSE'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#FF4500',
-                paddingHorizontal: 24,
-                paddingVertical: 12,
-                borderRadius: 8,
-              }}
-              onPress={resetTimer}
-            >
-              <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>RESET</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
+      <FreeFinalScreen
+        finalTime={state.finalTime}
+        currentRound={state.currentRound}
+        onReset={onResetTimer}
+        isLandscape={isLandscape}
+      />
     );
   }
+  
+  const commonProps = {
+    onResetTimer,
+    // Passer l'état et les actions du hook
+    totalMilliseconds: state.totalMilliseconds,
+    isRunning: state.isRunning,
+    isPaused: state.isPaused,
+    isOnFire: state.isOnFire,
+    currentRound: state.currentRound,
+    startTimer: actions.startTimer,
+    pauseTimer: actions.pauseTimer,
+    incrementRound: actions.incrementRound,
+    finishTimer: actions.finishTimer, // Added
+    formatTime
+  };
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16 }}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <FontAwesome name="arrow-left" size={24} color="#87CEEB" />
-        </TouchableOpacity>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ color: '#FFD700', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 }}>
-            FREE TIMER
-          </Text>
-          <Text style={{ color: '#FFFFFF', fontSize: 14, marginTop: 4, opacity: 0.8 }}>
-            Stopwatch
-          </Text>
-        </View>
-        <View style={{ width: 24 }} />
-      </View>
-      
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
-          <Text style={{
-            color: '#87CEEB',
-            fontSize: 18,
-            fontWeight: 'bold',
-            letterSpacing: 1,
-            marginBottom: 16
-          }}>
-            FREE TIMER
-          </Text>
-          
-          <Text style={{
-            color: '#FFFFFF',
-            fontSize: 16,
-            marginBottom: 32,
-            textAlign: 'center',
-            letterSpacing: 1
-          }}>
-            TIME ELAPSED
-          </Text>
-          
-          {/* Timer Circle */}
-          <View 
-            style={{
-              width: 280,
-              height: 280,
-              borderRadius: 140,
-              borderWidth: 12,
-              borderColor: isPaused ? '#87CEEB' : '#FFD700',
-              backgroundColor: '#000000',
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: isPaused ? '#87CEEB' : '#FFD700',
-              shadowOffset: { width: 0, height: 12 },
-              shadowOpacity: 0.6,
-              shadowRadius: 25,
-              elevation: 20,
-              marginBottom: 16
-            }}
-          >
-            <Text style={{
-              color: isPaused ? '#87CEEB' : '#FFD700',
-              fontSize: 40,
-              fontWeight: 'bold',
-              textAlign: 'center',
-            }}>
-              {formatTime(totalMilliseconds)}
-            </Text>
-          </View>
-
-          {/* Slider */}
-          <View style={{ marginBottom: 32, alignItems: 'center' }}>
-            <SlideToAction
-              label="SLIDE TO STOP"
-              onSlideComplete={resetTimer}
-              width={280}
-            />
-          </View>
-
-          {/* Control Buttons */}
-          <View style={{ flexDirection: 'row', gap: 16, marginBottom: 32 }}>
-            <TouchableOpacity
-              style={{
-                backgroundColor: isPaused ? '#FFD700' : '#87CEEB',
-                paddingHorizontal: 24,
-                paddingVertical: 12,
-                borderRadius: 8,
-              }}
-              onPress={isPaused ? startTimer : pauseTimer}
-            >
-              <Text style={{ color: '#000000', fontWeight: 'bold' }}>
-                {isPaused ? 'RESUME' : 'PAUSE'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#FF4500',
-                paddingHorizontal: 24,
-                paddingVertical: 12,
-                borderRadius: 8,
-              }}
-              onPress={resetTimer}
-            >
-              <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>RESET</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Final Time Display */}
-          {finalTime && (
-            <View style={{
-              backgroundColor: '#1A1A1A',
-              padding: 24,
-              borderRadius: 12,
-              alignItems: 'center',
-              borderWidth: 2,
-              borderColor: '#FFD700',
-              shadowColor: '#FFD700',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
-            }}>
-              <Text style={{
-                color: '#FFD700',
-                fontSize: 18,
-                fontWeight: 'bold',
-                marginBottom: 8
-              }}>
-                WORKOUT COMPLETED!
-              </Text>
-              <Text style={{
-                color: '#FFD700',
-                fontSize: 32,
-                fontWeight: 'bold'
-              }}>
-                {finalTime}
-              </Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+  if (isLandscape) {
+    return <LandscapeTimer {...commonProps} />;
+  } else {
+    return <PortraitTimer {...commonProps} />;
+  }
 }

@@ -9,7 +9,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../global.css';
 
-import { useColorScheme } from '@/components/useColorScheme';
 
 const queryClient = new QueryClient();
 
@@ -60,8 +59,6 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
@@ -73,7 +70,6 @@ function RootLayoutNav() {
             <Stack.Screen name="timers/emom/index" options={{ headerShown: false }} />
             <Stack.Screen name="timers/amrap/index" options={{ headerShown: false }} />
             <Stack.Screen name="timers/tabata/index" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
           </Stack>
         </ThemeProvider>
       </QueryClientProvider>

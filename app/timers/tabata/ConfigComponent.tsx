@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import WheelPicker from '@/components/WheelPicker';
+import WheelPicker from '@/components/ui/WheelPicker';
 
 interface TabataConfig {
   rounds: number;

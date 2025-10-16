@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import SlideToAction from '@/components/SlideToAction';
+import SlideToAction from '@/components/timers/SlideToAction';
 
 interface EMOMConfig {
   rounds: number;

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import WheelPicker from '@/components/WheelPicker';
+import WheelPicker from '@/components/ui/WheelPicker';
 
 const ROUNDS_ITEMS = Array.from({ length: 20 }, (_, i) => `${i + 1}`);
 const DURATION_ITEMS = ['1', '30s', '45s', '1:00', '1:30', '2:00', '3:00', '5:00'];

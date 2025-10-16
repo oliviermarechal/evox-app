@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import WheelPicker from '@/components/WheelPicker';
-import { Header } from '@/components/Header';
+import WheelPicker from '@/components/ui/WheelPicker';
+import { Header } from '@/components/ui/Header';
 
 interface AMRAPConfig {
   minutes: number;
