@@ -1,14 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, DimensionValue } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
+interface WheelPickerItem {
+  value: string | number;
+  label: string;
+}
+
 interface WheelPickerProps {
-  items: string[];
+  items: string[] | WheelPickerItem[];
   selectedIndex: number;
   onIndexChange: (index: number) => void;
   itemHeight?: number;
   visibleItems?: number;
-  width?: number;
+  width?: DimensionValue;
   textStyle?: object;
   selectedTextStyle?: object;
 }
@@ -49,6 +54,11 @@ export default function WheelPicker({
   
   const containerHeight = itemHeight * visibleItems;
   const paddingItems = Math.floor(visibleItems / 2);
+  
+  // Helper function to get display text
+  const getItemText = (item: string | WheelPickerItem) => {
+    return typeof item === 'string' ? item : item.label;
+  };
   
   // Add padding items at the beginning and end
   const paddedItems = [
@@ -227,7 +237,7 @@ export default function WheelPicker({
                     ...(isSelected ? selectedTextStyle : {})
                   }}
                 >
-                  {item}
+                  {getItemText(item)}
                 </Text>
               )}
             </View>
