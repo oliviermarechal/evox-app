@@ -21,17 +21,18 @@ export default function SportCard({ title, subtitle, iconName, onPress }: SportC
         borderRadius: 16,
         padding: isLandscape ? 12 : 16,
         width: isLandscape ? '18%' : '45%',
+        height: isLandscape ? 120 : undefined,
         minWidth: isLandscape ? 100 : 140,
         maxWidth: isLandscape ? 140 : 200,
         borderWidth: 1.5,
         borderColor: 'rgba(135, 206, 235, 0.3)',
         alignItems: 'center',
+        justifyContent: 'center',
         shadowColor: '#87CEEB',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.15,
         shadowRadius: 15,
         elevation: 6,
-        // Effet de profondeur premium
         position: 'relative',
       }}
     >

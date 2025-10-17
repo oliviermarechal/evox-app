@@ -32,6 +32,7 @@ export default function TimerComponent({ config, onResetTimer }: TimerComponentP
     pauseTimer: actions.pauseTimer,
     resetTimer: actions.resetTimer,
     incrementRound: actions.incrementRound,
+    finishTimer: actions.finishTimer,
     formatTime
   };
 

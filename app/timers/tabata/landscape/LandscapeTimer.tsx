@@ -1,64 +1,43 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FontAwesome } from '@expo/vector-icons';
-import { AddRoundButton } from '@/components/timers/AddRoundButton';
-import { LandscapeTimeDisplay } from '@/components/timers/displays/LandscapeTimeDisplay';
-import { AMRAPFinalScreen } from '@/components/timers/screens/AMRAPFinalScreen';
-import SlideToAction from '@/components/timers/SlideToAction';
 import { Header } from '@/components/ui/Header';
+import { LandscapeTimeDisplay } from '@/components/timers/displays/LandscapeTimeDisplay';
+import SlideToAction from '@/components/timers/SlideToAction';
 
-interface AMRAPConfig {
-  minutes: number;
-  seconds: number;
+interface TabataConfig {
+  rounds: number;
+  workTime: number;
+  restTime: number;
 }
 
 interface LandscapeTimerProps {
-  config: AMRAPConfig;
-  onResetTimer: () => void;
+  config: TabataConfig;
   remainingMilliseconds: number;
   isRunning: boolean;
   isPaused: boolean;
   currentRound: number;
-  finalTime: string | null;
-  isOnFire: boolean;
+  isWorkPhase: boolean;
   startTimer: () => void;
   pauseTimer: () => void;
-  resetTimer: () => void;
-  incrementRound: () => void;
   finishTimer: () => void;
-  formatTime: (ms: number) => string;
+  onResetTimer: () => void;
+  formatTime: (milliseconds: number) => string;
 }
 
-export default function LandscapeTimer({ 
-  config, 
-  onResetTimer,
+export default function LandscapeTimer({
+  config,
   remainingMilliseconds,
   isRunning,
   isPaused,
   currentRound,
-  finalTime,
-  isOnFire,
+  isWorkPhase,
   startTimer,
   pauseTimer,
-  resetTimer,
-  incrementRound,
   finishTimer,
-  formatTime
+  onResetTimer,
+  formatTime,
 }: LandscapeTimerProps) {
-
-  if (finalTime) {
-    return (
-      <AMRAPFinalScreen
-        finalTime={finalTime}
-        currentRound={currentRound}
-        timeCap={`${config.minutes}:${config.seconds.toString().padStart(2, '0')}`}
-        onReset={onResetTimer}
-        isLandscape={true}
-      />
-    );
-  }
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
       {/* Background simple */}
@@ -72,8 +51,8 @@ export default function LandscapeTimer({
       }} />
       {/* Header générique sans flèche retour */}
       <Header
-        title="AMRAP TIMER"
-        subtitle={`Round ${currentRound} • ${isPaused ? 'PAUSED' : isRunning ? 'RUNNING' : 'READY'}`}
+        title="TABATA TIMER"
+        subtitle={`Round ${currentRound} • ${isWorkPhase ? 'WORK' : 'REST'}`}
       />
 
       <View style={{ 
@@ -103,7 +82,6 @@ export default function LandscapeTimer({
             <LandscapeTimeDisplay 
               timeString={formatTime(remainingMilliseconds)}
               isPaused={isPaused}
-              isOnFire={isOnFire}
             />
           </TouchableOpacity>
 
@@ -118,7 +96,7 @@ export default function LandscapeTimer({
             zIndex: 10,
           }}>
             <SlideToAction
-              onSlideComplete={finishTimer}
+              onSlideComplete={finishTimer || onResetTimer}
               label="FINISH"
               width={270}
               height={50}
@@ -135,13 +113,13 @@ export default function LandscapeTimer({
           marginLeft: 15
         }} />
 
+        {/* Round Counter and Phase Info */}
         <View style={{
           alignItems: 'center',
           justifyContent: 'center',
           minWidth: 160,
           gap: 20,
         }}>
-          {/* Round Counter */}
           <View style={{
             alignItems: 'center',
             marginBottom: 32,
@@ -159,7 +137,7 @@ export default function LandscapeTimer({
             </Text>
             <Text style={{
               color: '#F5F5DC',
-              fontSize: 58,
+              fontSize: 48,
               fontWeight: '600',
               textAlign: 'center',
               textShadowColor: 'rgba(245, 245, 220, 0.3)',
@@ -167,13 +145,38 @@ export default function LandscapeTimer({
               textShadowRadius: 20,
               letterSpacing: -1,
               fontFamily: 'monospace',
-              lineHeight: 58,
+              lineHeight: 48,
             }}>
               {currentRound}
             </Text>
+            {/* Progress indicator */}
+            <Text style={{
+              color: 'rgba(135, 206, 235, 0.6)',
+              fontSize: 14,
+              fontWeight: '500',
+              textAlign: 'center',
+              marginTop: 8,
+            }}>
+              {currentRound - 1}/{config.rounds} completed
+            </Text>
           </View>
 
-          <AddRoundButton onPress={incrementRound} />
+          {/* Phase Indicator */}
+          <View style={{
+            alignItems: 'center',
+            marginBottom: 32,
+          }}>
+            <Text style={{
+              color: isWorkPhase ? 'rgba(135, 206, 235, 0.8)' : 'rgba(255, 165, 0, 0.8)',
+              fontSize: 16,
+              fontWeight: '600',
+              textAlign: 'center',
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+            }}>
+              {isWorkPhase ? 'WORK' : 'REST'}
+            </Text>
+          </View>
         </View>
       </View>
     </SafeAreaView>

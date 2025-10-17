@@ -1,64 +1,43 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AddRoundButton } from '@/components/timers/AddRoundButton';
-import { PortraitTimeDisplay } from '@/components/timers/displays/PortraitTimeDisplay';
-import { AMRAPFinalScreen } from '@/components/timers/screens/AMRAPFinalScreen';
-import SlideToAction from '@/components/timers/SlideToAction';
 import { Header } from '@/components/ui/Header';
+import { PortraitTimeDisplay } from '@/components/timers/displays/PortraitTimeDisplay';
+import SlideToAction from '@/components/timers/SlideToAction';
 
-interface AMRAPConfig {
-  minutes: number;
-  seconds: number;
+interface TabataConfig {
+  rounds: number;
+  workTime: number;
+  restTime: number;
 }
 
 interface PortraitTimerProps {
-  config: AMRAPConfig;
-  onResetTimer: () => void;
+  config: TabataConfig;
   remainingMilliseconds: number;
   isRunning: boolean;
   isPaused: boolean;
   currentRound: number;
-  finalTime: string | null;
-  isOnFire: boolean;
+  isWorkPhase: boolean;
   startTimer: () => void;
   pauseTimer: () => void;
-  resetTimer: () => void;
-  incrementRound: () => void;
   finishTimer: () => void;
-  formatTime: (ms: number) => string;
+  onResetTimer: () => void;
+  formatTime: (milliseconds: number) => string;
 }
 
-export default function PortraitTimer({ 
-  config, 
-  onResetTimer,
+export default function PortraitTimer({
+  config,
   remainingMilliseconds,
   isRunning,
   isPaused,
   currentRound,
-  finalTime,
-  isOnFire,
+  isWorkPhase,
   startTimer,
   pauseTimer,
-  resetTimer,
-  incrementRound,
   finishTimer,
-  formatTime
+  onResetTimer,
+  formatTime,
 }: PortraitTimerProps) {
-
-  // Afficher l'écran de fin si le timer est terminé
-  if (finalTime) {
-    return (
-      <AMRAPFinalScreen
-        finalTime={finalTime}
-        currentRound={currentRound}
-        timeCap={`${config.minutes}:${config.seconds.toString().padStart(2, '0')}`}
-        onReset={onResetTimer}
-        isLandscape={false}
-      />
-    );
-  }
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
       {/* Background avec gradient subtil */}
@@ -82,8 +61,8 @@ export default function PortraitTimer({
       </View>
       {/* Header générique sans flèche retour */}
       <Header
-        title="AMRAP TIMER"
-        subtitle={`Round ${currentRound}`}
+        title="TABATA TIMER"
+        subtitle={`Round ${currentRound} • ${isWorkPhase ? 'WORK' : 'REST'}`}
       />
 
       <View style={{ 
@@ -103,27 +82,25 @@ export default function PortraitTimer({
                 height: 350,
                 borderRadius: 175,
                 borderWidth: 1.5,
-                borderColor: isOnFire ? '#FF4500' : 'rgba(135, 206, 235, 0.6)',
+                borderColor: isWorkPhase ? 'rgba(135, 206, 235, 0.6)' : 'rgba(255, 165, 0, 0.6)', // Orange for rest
                 backgroundColor: '#000000',
                 alignItems: 'center',
                 justifyContent: 'center',
-                shadowColor: isOnFire ? '#FF4500' : '#87CEEB',
+                shadowColor: isWorkPhase ? '#87CEEB' : '#FFA500', // Orange glow for rest
                 shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: isOnFire ? 1.0 : 0.3,
-                shadowRadius: isOnFire ? 50 : 20,
-                elevation: isOnFire ? 50 : 12,
+                shadowOpacity: 0.3,
+                shadowRadius: 20,
+                elevation: 20,
               }}
             >
-              {/* PortraitTimeDisplay réutilisable */}
-              <PortraitTimeDisplay 
+              <PortraitTimeDisplay
                 timeString={formatTime(remainingMilliseconds)}
                 isPaused={isPaused}
-                isOnFire={isOnFire}
               />
             </TouchableOpacity>
         </View>
 
-        {/* Round Counter avec bouton */}
+        {/* Round Counter and Phase Info */}
         <View style={{ 
           alignItems: 'center',
           justifyContent: 'center',
@@ -159,9 +136,34 @@ export default function PortraitTimer({
             }}>
               {currentRound}
             </Text>
+            {/* Progress indicator */}
+            <Text style={{
+              color: 'rgba(135, 206, 235, 0.6)',
+              fontSize: 12,
+              fontWeight: '500',
+              textAlign: 'center',
+              marginTop: 4,
+            }}>
+              {currentRound - 1}/{config.rounds} completed
+            </Text>
           </View>
 
-          <AddRoundButton onPress={incrementRound} />
+          {/* Phase Indicator */}
+          <View style={{
+            alignItems: 'center',
+            marginBottom: 16,
+          }}>
+            <Text style={{
+              color: isWorkPhase ? 'rgba(135, 206, 235, 0.8)' : 'rgba(255, 165, 0, 0.8)',
+              fontSize: 14,
+              fontWeight: '600',
+              textAlign: 'center',
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+            }}>
+              {isWorkPhase ? 'WORK' : 'REST'}
+            </Text>
+          </View>
         </View>
 
         {/* SlideToAction pour portrait */}
@@ -171,7 +173,7 @@ export default function PortraitTimer({
           marginBottom: 20,
         }}>
           <SlideToAction
-            onSlideComplete={finishTimer}
+            onSlideComplete={finishTimer || onResetTimer}
             label="FINISH"
             width={280}
             height={50}
@@ -179,7 +181,6 @@ export default function PortraitTimer({
           />
         </View>
       </View>
-
     </SafeAreaView>
   );
 }

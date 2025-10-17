@@ -4,8 +4,8 @@ import { useOrientation } from '@/hooks/useOrientation';
 import { useScreenOrientation } from '@/hooks/useScreenOrientation';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useAMRAPFlow } from '@/hooks/amrap/useAMRAPFlow';
-import LandscapeReady from './landscape/LandscapeReady';
-import PortraitReady from './portrait/PortraitReady';
+import PortraitReady from '@/components/timers/screens/PortraitReady';
+import LandscapeReady from '@/components/timers/screens/LandscapeReady';
 import ConfigComponent from './ConfigComponent';
 import TimerComponent from './TimerComponent';
 
@@ -30,6 +30,7 @@ export default function AMRAPScreen() {
     if (isLandscape) {
       return (
         <LandscapeReady
+          title="AMRAP"
           config={state.validatedConfig!}
           onStartCountdown={actions.handleReadyToStart}
           onBack={actions.handleBackToConfig}
@@ -43,6 +44,7 @@ export default function AMRAPScreen() {
     } else {
       return (
         <PortraitReady
+          title="AMRAP"
           config={state.validatedConfig!}
           onStartCountdown={actions.handleReadyToStart}
           onBack={actions.handleBackToConfig}

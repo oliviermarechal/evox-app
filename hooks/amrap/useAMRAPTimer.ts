@@ -20,6 +20,7 @@ export interface AMRAPTimerActions {
   pauseTimer: () => void;
   resetTimer: () => void;
   incrementRound: () => void;
+  finishTimer: () => void;
 }
 
 export function useAMRAPTimer(config: AMRAPConfig) {
@@ -138,11 +139,26 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     hasStarted,
   };
 
+  const finishTimer = useCallback(() => {
+    setIsRunning(false);
+    setIsPaused(false);
+    
+    // Calculate total elapsed time
+    const totalTime = (config.minutes * 60 + config.seconds) * 1000;
+    const elapsed = totalTime - remainingMilliseconds;
+    setFinalTime(formatTime(elapsed));
+    
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+  }, [config.minutes, config.seconds, remainingMilliseconds, formatTime]);
+
   const actions: AMRAPTimerActions = {
     startTimer,
     pauseTimer,
     resetTimer,
     incrementRound,
+    finishTimer,
   };
 
   return { state, actions, formatTime };

@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
-import { useLocalSearchParams } from 'expo-router';
-import { useOrientation } from '@/hooks/useOrientation';
+import React from 'react';
+import { useLocalSearchParams, router } from 'expo-router';
 import { useScreenOrientation } from '@/hooks/useScreenOrientation';
+import { useOrientation } from '@/hooks/useOrientation';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { useTabataFlow } from '@/hooks/tabata/useTabataFlow';
 import ConfigComponent from './ConfigComponent';
-import CountdownComponent from './CountdownComponent';
 import TimerComponent from './TimerComponent';
+import PortraitReady from '@/components/timers/screens/PortraitReady';
+import LandscapeReady from '@/components/timers/screens/LandscapeReady';
 
 interface TabataConfig {
   rounds: number;
@@ -17,101 +16,84 @@ interface TabataConfig {
 }
 
 export default function TabataScreen() {
-  // Allow all orientations for timer screens
   useScreenOrientation(ScreenOrientation.OrientationLock.DEFAULT);
   
-  const [showTimer, setShowTimer] = useState(false);
-  const [validatedConfig, setValidatedConfig] = useState<TabataConfig | null>(null);
-  const [isCountdown, setIsCountdown] = useState(false);
-  const [countdownValue, setCountdownValue] = useState(10);
-  const [isCountdownPaused, setIsCountdownPaused] = useState(false);
+  const { rounds: roundsParam, workTime: workTimeParam, restTime: restTimeParam } = useLocalSearchParams<{
+    rounds?: string;
+    workTime?: string;
+    restTime?: string;
+  }>();
   
   const { isLandscape } = useOrientation();
-  const { rounds: roundsParam, workTime: workTimeParam, restTime: restTimeParam } = useLocalSearchParams();
+  const state = useTabataFlow();
 
-  useFocusEffect(
-    React.useCallback(() => {
-      // Reset timer when screen is focused
-      setShowTimer(false);
-      setValidatedConfig(null);
-      setIsCountdown(false);
-    }, [])
-  );
-
-  const handleStartCountdown = (config: TabataConfig) => {
-    setValidatedConfig(config);
-    setShowTimer(true);
-    setIsCountdown(true);
-    setCountdownValue(10);
-    startCountdown();
-  };
-
-  const startCountdown = () => {
-    const interval = setInterval(() => {
-      setCountdownValue(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setIsCountdown(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const handleSkipCountdown = () => {
-    setIsCountdown(false);
-  };
-
-  const handlePauseCountdown = () => {
-    setIsCountdownPaused(true);
-  };
-
-  const handleResumeCountdown = () => {
-    setIsCountdownPaused(false);
-  };
-
-  const handleCancelCountdown = () => {
-    setShowTimer(false);
-    setValidatedConfig(null);
-    setIsCountdown(false);
-  };
-
-  const handleResetTimer = () => {
-    setShowTimer(false);
-    setValidatedConfig(null);
-    setIsCountdown(false);
-  };
-
-  if (!showTimer) {
+  if (roundsParam && workTimeParam && restTimeParam) {
+    const config: TabataConfig = {
+      rounds: parseInt(roundsParam, 10),
+      workTime: parseInt(workTimeParam, 10),
+      restTime: parseInt(restTimeParam, 10)
+    };
+    
     return (
-      <ConfigComponent
-        onStartCountdown={handleStartCountdown}
-        initialRounds={roundsParam ? parseInt(roundsParam as string) : undefined}
-        initialWorkTime={workTimeParam ? parseInt(workTimeParam as string) : undefined}
-        initialRestTime={restTimeParam ? parseInt(restTimeParam as string) : undefined}
+      <TimerComponent 
+        config={config}
+        isLandscape={isLandscape}
+        onResetTimer={() => router.back()}
       />
     );
   }
 
-  if (isCountdown) {
+  if (state.showTimer && state.validatedConfig) {
     return (
-      <CountdownComponent
-        countdownValue={countdownValue}
-        isCountdownPaused={isCountdownPaused}
-        onSkipCountdown={handleSkipCountdown}
-        onPauseCountdown={handlePauseCountdown}
-        onResumeCountdown={handleResumeCountdown}
-        onCancelCountdown={handleCancelCountdown}
+      <TimerComponent 
+        config={state.validatedConfig}
+        isLandscape={isLandscape}
+        onResetTimer={() => router.back()}
       />
     );
   }
 
+  if (state.isCountdown) {
+    return isLandscape ? (
+      <LandscapeReady
+        title="TABATA"
+        config={state.validatedConfig ? {
+          minutes: Math.floor(state.validatedConfig.workTime / 60),
+          seconds: state.validatedConfig.workTime % 60
+        } : undefined}
+        onStartCountdown={state.handleReadyToStart}
+        onBack={state.handleBackToConfig}
+        onSkipCountdown={state.handleSkipCountdown}
+        countdownValue={state.countdownValue}
+        isCountdown={state.isCountdown}
+        isPaused={state.isCountdownPaused}
+        onTogglePause={state.handleToggleCountdownPause}
+      />
+    ) : (
+      <PortraitReady
+        title="TABATA"
+        config={state.validatedConfig ? {
+          minutes: Math.floor(state.validatedConfig.workTime / 60),
+          seconds: state.validatedConfig.workTime % 60
+        } : undefined}
+        onStartCountdown={state.handleReadyToStart}
+        onBack={state.handleBackToConfig}
+        onSkipCountdown={state.handleSkipCountdown}
+        countdownValue={state.countdownValue}
+        isCountdown={state.isCountdown}
+        isPaused={state.isCountdownPaused}
+        onTogglePause={state.handleToggleCountdownPause}
+      />
+    );
+  }
+
+  // Configuration phase
   return (
-    <TimerComponent
-      config={validatedConfig!}
-      isLandscape={isLandscape}
-      onResetTimer={handleResetTimer}
+    <ConfigComponent 
+      onStartCountdown={state.handleStartCountdown}
+      initialRounds={roundsParam ? parseInt(roundsParam, 10) : 8}
+      initialWorkTime={workTimeParam ? parseInt(workTimeParam, 10) : 20}
+      initialRestTime={restTimeParam ? parseInt(restTimeParam, 10) : 10}
     />
   );
 }
