@@ -47,7 +47,6 @@ export default function LandscapeTimer({
         backgroundColor: '#0F0F10',
       }} />
       
-      {/* Header générique */}
       <Header 
         onBackPress={() => router.back()}
         title="FREE TIMER"
@@ -68,9 +67,8 @@ export default function LandscapeTimer({
           alignItems: 'center',
           justifyContent: 'center',
           paddingHorizontal: 48,
-          paddingVertical: 120,
-          minHeight: 400,
-          position: 'relative',
+          paddingVertical: 40,
+          height: '100%',
         }}>
           <TouchableOpacity
             onPress={isPaused ? startTimer : pauseTimer}
@@ -85,6 +83,25 @@ export default function LandscapeTimer({
               isOnFire={isOnFire}
             />
           </TouchableOpacity>
+
+          <View style={{
+            bottom: 30,
+            left: 0,
+            right: 0,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: 40,
+            marginTop: 40,
+            zIndex: 10,
+          }}>
+              <SlideToAction
+                onSlideComplete={finishTimer || onResetTimer}
+                label="FINISH"
+                width={270}
+                height={50}
+                orientation="horizontal"
+              />
+          </View>
         </View>
 
         <View style={{
@@ -133,31 +150,10 @@ export default function LandscapeTimer({
             </Text>
           </View>
 
-          {/* Bouton Add Round - Même que AMRAP */}
           {incrementRound && (
             <AddRoundButton onPress={incrementRound} />
           )}
         </View>
-      </View>
-
-      {/* SlideToAction horizontal en bas */}
-      <View style={{
-        position: 'absolute',
-        bottom: 30,
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 40,
-        zIndex: 10,
-      }}>
-                <SlideToAction
-                  onSlideComplete={finishTimer || onResetTimer}
-                  label="FINISH"
-                  width={220}
-                  height={55}
-                  orientation="horizontal"
-                />
       </View>
     </SafeAreaView>
   );

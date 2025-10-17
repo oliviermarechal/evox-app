@@ -152,7 +152,7 @@ export default function PortraitTimer({
             onSlideComplete={finishTimer || onResetTimer}
             label="FINISH"
             width={280}
-            height={55}
+            height={50}
             orientation="horizontal"
           />
         </View>
