@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export interface FreeTimerState {
-  totalMilliseconds: number;
+export interface ForTimeConfig {
+  minutes: number;
+  seconds: number;
+}
+
+export interface ForTimeTimerState {
+  remainingMilliseconds: number;
   isRunning: boolean;
   isPaused: boolean;
   finalTime: string | null;
@@ -9,7 +14,7 @@ export interface FreeTimerState {
   currentRound: number;
 }
 
-export interface FreeTimerActions {
+export interface ForTimeTimerActions {
   startTimer: () => void;
   pauseTimer: () => void;
   resetTimer: () => void;
@@ -17,8 +22,8 @@ export interface FreeTimerActions {
   finishTimer: () => void;
 }
 
-export function useFreeTimer() {
-  const [totalMilliseconds, setTotalMilliseconds] = useState(0);
+export function useForTimeTimer(config: ForTimeConfig) {
+  const [remainingMilliseconds, setRemainingMilliseconds] = useState(config.minutes * 60 * 1000 + config.seconds * 1000);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [finalTime, setFinalTime] = useState<string | null>(null);
@@ -37,44 +42,37 @@ export function useFreeTimer() {
   }, []);
 
   const startTimer = useCallback(() => {
-    if (!isRunning && !isPaused) {
-      setIsRunning(true);
-      setTotalMilliseconds(0); // Reset to 0 when starting fresh
-      intervalRef.current = setInterval(() => {
-        setTotalMilliseconds(prev => {
-          const newTotal = prev + 10;
-          // Effet "on fire" après 1 heure
-          if (newTotal >= 3600000 && !isOnFire) {
-            setIsOnFire(true);
-          }
-          return newTotal;
-        });
-      }, 10);
-    } else if (isPaused) {
-      setIsPaused(false);
-      setIsRunning(true);
-      intervalRef.current = setInterval(() => {
-        setTotalMilliseconds(prev => {
-          const newTotal = prev + 10;
-          // Effet "on fire" après 1 heure
-          if (newTotal >= 3600000 && !isOnFire) {
-            setIsOnFire(true);
-          }
-          return newTotal;
-        });
-      }, 10);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
     }
-  }, [isRunning, isPaused, isOnFire]);
+    setIsRunning(true);
+    setIsPaused(false);
+    intervalRef.current = setInterval(() => {
+      setRemainingMilliseconds(prev => {
+        const newRemaining = prev - 10;
+        if (newRemaining <= 0) {
+          clearInterval(intervalRef.current);
+          setIsRunning(false);
+          setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000));
+          return 0;
+        }
+        // Effet "on fire" quand il reste moins de 10% du temps
+        const totalTime = config.minutes * 60 * 1000 + config.seconds * 1000;
+        if (newRemaining <= totalTime * 0.1 && !isOnFire) {
+          setIsOnFire(true);
+        }
+        return newRemaining;
+      });
+    }, 10);
+  }, [config.minutes, config.seconds, formatTime, isOnFire]);
 
   const pauseTimer = useCallback(() => {
-    if (isRunning) {
-      setIsRunning(false);
-      setIsPaused(true);
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+    setIsRunning(false);
+    setIsPaused(true);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
     }
-  }, [isRunning]);
+  }, []);
 
   const incrementRound = useCallback(() => {
     setCurrentRound(prev => prev + 1);
@@ -86,13 +84,13 @@ export function useFreeTimer() {
     }
     setIsRunning(false);
     setIsPaused(false);
-    setFinalTime(formatTime(totalMilliseconds));
-  }, [totalMilliseconds, formatTime]);
+    setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000 - remainingMilliseconds));
+  }, [remainingMilliseconds, config.minutes, config.seconds, formatTime]);
 
   const resetTimer = useCallback(() => {
     setIsRunning(false);
     setIsPaused(false);
-    setTotalMilliseconds(0);
+    setRemainingMilliseconds(config.minutes * 60 * 1000 + config.seconds * 1000);
     setFinalTime(null);
     setIsOnFire(false);
     setCurrentRound(0);
@@ -100,7 +98,8 @@ export function useFreeTimer() {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-  }, []);
+  }, [config.minutes, config.seconds]);
+
 
   // Auto-start timer when component mounts (only once)
   useEffect(() => {
@@ -111,9 +110,8 @@ export function useFreeTimer() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, []); // Dépendances vides pour ne se déclencher qu'une fois
+  }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (intervalRef.current) {
@@ -122,8 +120,8 @@ export function useFreeTimer() {
     };
   }, []);
 
-  const state: FreeTimerState = {
-    totalMilliseconds,
+  const state: ForTimeTimerState = {
+    remainingMilliseconds,
     isRunning,
     isPaused,
     finalTime,
@@ -131,7 +129,7 @@ export function useFreeTimer() {
     currentRound,
   };
 
-  const actions: FreeTimerActions = {
+  const actions: ForTimeTimerActions = {
     startTimer,
     pauseTimer,
     resetTimer,

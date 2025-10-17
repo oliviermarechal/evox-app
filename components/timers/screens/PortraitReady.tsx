@@ -9,10 +9,14 @@ import Animated, {
   withSequence
 } from 'react-native-reanimated';
 
+interface TimeConfig {
+  minutes: number;
+  seconds: number;
+}
+
 interface PortraitReadyProps {
   title: string;
-  subtitle: string;
-  configDisplay?: React.ReactNode;
+  config?: TimeConfig;
   onStartCountdown: () => void;
   onBack: () => void;
   onSkipCountdown: () => void;
@@ -22,10 +26,9 @@ interface PortraitReadyProps {
   onTogglePause?: () => void;
 }
 
-export default function PortraitReady({ 
-  title, 
-  subtitle, 
-  configDisplay,
+export default function     PortraitReady({ 
+  title,
+  config,
   onStartCountdown, 
   onBack, 
   onSkipCountdown, 
@@ -231,23 +234,23 @@ export default function PortraitReady({
             </View>
           </TouchableOpacity>
 
-          {/* Temps configuré (seulement si configDisplay) */}
-          {configDisplay && (
+          {/* Temps configuré */}
+          {config && (
             <Text style={{
-              color: '#F5F5DC',
-              fontSize: 28,
-              fontWeight: 'bold',
-              marginTop: 32,
-              textAlign: 'center',
-              letterSpacing: 1,
-              textShadowColor: 'rgba(135, 206, 235, 0.3)',
-              textShadowOffset: { width: 0, height: 0 },
-              textShadowRadius: 15,
-            }}>
-              {configDisplay}
-            </Text>
+            color: '#F5F5DC',
+            fontSize: 28,
+            fontWeight: 'bold',
+            marginTop: 32,
+            textAlign: 'center',
+            letterSpacing: 1,
+            textShadowColor: 'rgba(135, 206, 235, 0.3)',
+            textShadowOffset: { width: 0, height: 0 },
+            textShadowRadius: 15,
+          }}>
+            {config.minutes}:{config.seconds.toString().padStart(2, '0')}
+          </Text>
           )}
-
+          
           {/* Ready */}
           <Text style={{
             color: 'rgba(135, 206, 235, 0.8)',

@@ -12,7 +12,6 @@ export interface AMRAPTimerState {
   currentRound: number;
   finalTime: string | null;
   isOnFire: boolean;
-  timerPosition: { x: number; y: number; width: number; height: number } | undefined;
   hasStarted: boolean;
 }
 
@@ -21,7 +20,6 @@ export interface AMRAPTimerActions {
   pauseTimer: () => void;
   resetTimer: () => void;
   incrementRound: () => void;
-  setTimerPosition: (position: { x: number; y: number; width: number; height: number }) => void;
 }
 
 export function useAMRAPTimer(config: AMRAPConfig) {
@@ -33,7 +31,6 @@ export function useAMRAPTimer(config: AMRAPConfig) {
   const [currentRound, setCurrentRound] = useState(1);
   const [finalTime, setFinalTime] = useState<string | null>(null);
   const [isOnFire, setIsOnFire] = useState(false);
-  const [timerPosition, setTimerPosition] = useState<{ x: number; y: number; width: number; height: number } | undefined>(undefined);
   const [hasStarted, setHasStarted] = useState(false);
   const hasAutoStarted = useRef(false);
 
@@ -138,7 +135,6 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     currentRound,
     finalTime,
     isOnFire,
-    timerPosition,
     hasStarted,
   };
 
@@ -147,7 +143,6 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     pauseTimer,
     resetTimer,
     incrementRound,
-    setTimerPosition,
   };
 
   return { state, actions, formatTime };

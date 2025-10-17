@@ -19,7 +19,6 @@ export default function FreeTimerScreen() {
       return (
         <LandscapeReady
           title="FREE TIMER"
-          subtitle="Stopwatch"
           onStartCountdown={actions.handleReadyToStart}
           onBack={() => router.back()}
           onSkipCountdown={actions.handleSkipCountdown}
@@ -33,7 +32,6 @@ export default function FreeTimerScreen() {
       return (
         <PortraitReady
           title="FREE TIMER"
-          subtitle="Stopwatch"
           onStartCountdown={actions.handleReadyToStart}
           onBack={() => router.back()}
           onSkipCountdown={actions.handleSkipCountdown}

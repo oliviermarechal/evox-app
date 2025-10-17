@@ -9,10 +9,14 @@ import Animated, {
   withSequence,
 } from 'react-native-reanimated';
 
+interface TimeConfig {
+  minutes: number;
+  seconds: number;
+}
+
 interface LandscapeReadyProps {
   title: string;
-  subtitle: string;
-  configDisplay?: React.ReactNode;
+  config?: TimeConfig;
   onStartCountdown: () => void;
   onBack: () => void;
   onSkipCountdown: () => void;
@@ -23,9 +27,8 @@ interface LandscapeReadyProps {
 }
 
 export default function LandscapeReady({ 
-  title, 
-  subtitle, 
-  configDisplay,
+  title,
+  config,
   onStartCountdown, 
   onBack, 
   onSkipCountdown, 
@@ -34,14 +37,12 @@ export default function LandscapeReady({
   isPaused, 
   onTogglePause 
 }: LandscapeReadyProps) {
-  // Animation values
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
   const translateX = useSharedValue(0);
   const pulseScale = useSharedValue(1);
-  const borderColor = useSharedValue(0); // 0 = blue, 1 = orange, 2 = red
+  const borderColor = useSharedValue(0);
 
-  // Animation styles
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { scale: scale.value * pulseScale.value },
@@ -51,14 +52,10 @@ export default function LandscapeReady({
   }));
 
   const borderAnimatedStyle = useAnimatedStyle(() => {
-    const colors = ['#87CEEB', '#87CEEB', '#F5F5DC']; // Bleu gris, Bleu gris, Blanc cassé
+    const colors = ['#87CEEB', '#87CEEB', '#F5F5DC'];
     const colorIndex = Math.floor(borderColor.value);
-    const nextColorIndex = (colorIndex + 1) % colors.length;
-    const progress = borderColor.value - colorIndex;
     
-    // Interpolation fluide entre les couleurs
     const currentColor = colors[colorIndex];
-    const nextColor = colors[nextColorIndex];
     
     return {
       borderColor: currentColor,
@@ -66,17 +63,14 @@ export default function LandscapeReady({
     };
   });
 
-  // Animation when countdown starts
   React.useEffect(() => {
     if (isCountdown) {
-      // Animation d'entrée sophistiquée - vif et précis
       scale.value = withSequence(
         withTiming(1.12, { duration: 120 }),
         withTiming(1, { duration: 80 })
       );
       opacity.value = withTiming(1, { duration: 150 });
       
-      // Pulse sophistiqué - rythme précis et élégant
       pulseScale.value = withSequence(
         withTiming(1.03, { duration: 400 }),
         withTiming(1, { duration: 400 }),
@@ -84,31 +78,26 @@ export default function LandscapeReady({
         withTiming(1, { duration: 400 })
       );
       
-      // Transition de couleur sophistiquée - dégradé fluide
-      borderColor.value = withTiming(2, { duration: 10000 }); // 10 secondes pour le dégradé complet
+      borderColor.value = withTiming(2, { duration: 10000 });
     }
   }, [isCountdown]);
 
-  // Animation à chaque seconde du countdown
   React.useEffect(() => {
     if (isCountdown && countdownValue !== undefined) {
-      // Pulse sophistiqué à chaque seconde - vif et précis
       pulseScale.value = withSequence(
         withTiming(1.06, { duration: 180 }),
         withTiming(1, { duration: 120 })
       );
       
-      // Flash de couleur sophistiqué - alternance élégante
       borderColor.value = withSequence(
-        withTiming(2, { duration: 250 }), // Flash blanc cassé
-        withTiming(0, { duration: 150 })  // Retour bleu gris
+        withTiming(2, { duration: 250 }),
+        withTiming(0, { duration: 150 })
       );
     }
   }, [countdownValue]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-      {/* Header minimaliste - comme le concurrent */}
       <View style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -126,9 +115,7 @@ export default function LandscapeReady({
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Layout centré pour countdown, horizontal pour ready */}
       {isCountdown ? (
-        /* Countdown centré avec animation */
         <View style={{ 
           flex: 1, 
           justifyContent: 'center', 
@@ -172,7 +159,6 @@ export default function LandscapeReady({
             </Animated.View>
           </TouchableOpacity>
           
-          {/* Bouton Skip en bas à droite */}
           <TouchableOpacity 
             onPress={onSkipCountdown}
             style={{
@@ -202,8 +188,79 @@ export default function LandscapeReady({
             </Text>
           </TouchableOpacity>
         </View>
+      ) : config ? (
+        /* Layout horizontal pour Ready avec config */
+        <View style={{ 
+          flex: 1, 
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingHorizontal: 40,
+          paddingVertical: 20,
+        }}>
+          <View style={{ 
+            flex: 1, 
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingRight: 40,
+          }}>
+            <Text style={{
+              color: '#F5F5DC',
+              fontSize: 64,
+              fontWeight: 'bold',
+              textAlign: 'center',
+              letterSpacing: 2,
+              marginBottom: 20,
+              textShadowColor: 'rgba(135, 206, 235, 0.3)',
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 20,
+            }}>
+              {config.minutes}:{config.seconds.toString().padStart(2, '0')}
+            </Text>
+
+            <Text style={{
+              color: 'rgba(135, 206, 235, 0.8)',
+              fontSize: 24,
+              textAlign: 'center',
+              opacity: 0.9,
+              letterSpacing: 1,
+              fontWeight: '600',
+            }}>
+              Ready
+            </Text>
+          </View>
+
+          {/* Côté droit - Bouton Play */}
+          <View style={{ 
+            flex: 1, 
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingLeft: 40,
+          }}>
+            <TouchableOpacity
+              onPress={onStartCountdown}
+              style={{
+                width: 200,
+                height: 200,
+                borderRadius: 100,
+                borderWidth: 1.5,
+                borderColor: 'rgba(135, 206, 235, 0.6)',
+                backgroundColor: '#000000',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#87CEEB',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.4,
+                shadowRadius: 25,
+                elevation: 12,
+              }}
+            >
+              <FontAwesome name="play" size={80} color="#F5F5DC" />
+            </TouchableOpacity>
+          </View>
+        </View>
       ) : (
-        /* Ready avec timer en haut */
+        /* Layout centré pour Ready sans config */
         <View style={{ 
           flex: 1, 
           justifyContent: 'center', 
@@ -240,23 +297,6 @@ export default function LandscapeReady({
               <FontAwesome name="play" size={60} color="#F5F5DC" />
             </View>
           </TouchableOpacity>
-
-          {/* Temps configuré (seulement si configDisplay) */}
-          {configDisplay && (
-            <Text style={{
-              color: '#F5F5DC',
-              fontSize: 24,
-              fontWeight: 'bold',
-              marginTop: 24,
-              textAlign: 'center',
-              letterSpacing: 1,
-              textShadowColor: 'rgba(135, 206, 235, 0.3)',
-              textShadowOffset: { width: 0, height: 0 },
-              textShadowRadius: 15,
-            }}>
-              {configDisplay}
-            </Text>
-          )}
 
           {/* Ready */}
           <Text style={{

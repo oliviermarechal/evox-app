@@ -20,14 +20,13 @@ export interface FreeFlowActions {
 
 export function useFreeFlow() {
   const [showTimer, setShowTimer] = useState(false);
-  const [showReady, setShowReady] = useState(true); // ✅ Directement sur Ready pour Free timer
-  const [isCountdown, setIsCountdown] = useState(false); // Pas de countdown automatique
+  const [showReady, setShowReady] = useState(true);
+  const [isCountdown, setIsCountdown] = useState(false);
   const [countdownValue, setCountdownValue] = useState(10);
   const [isCountdownPaused, setIsCountdownPaused] = useState(false);
   const countdownIntervalRef = useRef<any>(null);
 
   const handleStartCountdown = useCallback(() => {
-    console.log('handleStartCountdown free flow');
     setShowReady(true);
   }, []);
 

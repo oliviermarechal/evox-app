@@ -1,62 +1,46 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FontAwesome } from '@expo/vector-icons';
-import { AddRoundButton } from '@/components/timers/AddRoundButton';
-import { LandscapeTimeDisplay } from '@/components/timers/displays/LandscapeTimeDisplay';
-import { AMRAPFinalScreen } from '@/components/timers/screens/AMRAPFinalScreen';
-import SlideToAction from '@/components/timers/SlideToAction';
+import { router } from 'expo-router';
 import { Header } from '@/components/ui/Header';
+import { LandscapeTimeDisplay } from '@/components/timers/displays/LandscapeTimeDisplay';
+import { AddRoundButton } from '@/components/timers/AddRoundButton';
+import SlideToAction from '@/components/timers/SlideToAction';
 
-interface AMRAPConfig {
+export interface ForTimeConfig {
   minutes: number;
   seconds: number;
 }
 
 interface LandscapeTimerProps {
-  config: AMRAPConfig;
+  config: ForTimeConfig;
   onResetTimer: () => void;
   remainingMilliseconds: number;
   isRunning: boolean;
   isPaused: boolean;
-  currentRound: number;
-  finalTime: string | null;
   isOnFire: boolean;
   startTimer: () => void;
   pauseTimer: () => void;
-  resetTimer: () => void;
-  incrementRound: () => void;
   formatTime: (ms: number) => string;
+  currentRound?: number;
+  incrementRound?: () => void;
+  finishTimer?: () => void;
 }
 
-export default function LandscapeTimer({ 
-  config, 
+export default function LandscapeTimer({
+  config,
   onResetTimer,
   remainingMilliseconds,
   isRunning,
   isPaused,
-  currentRound,
-  finalTime,
   isOnFire,
   startTimer,
   pauseTimer,
-  resetTimer,
+  formatTime,
+  currentRound = 0,
   incrementRound,
-  formatTime
+  finishTimer
 }: LandscapeTimerProps) {
-
-  if (finalTime) {
-    return (
-      <AMRAPFinalScreen
-        finalTime={finalTime}
-        currentRound={currentRound}
-        timeCap={`${config.minutes}:${config.seconds.toString().padStart(2, '0')}`}
-        onReset={resetTimer}
-        isLandscape={true}
-      />
-    );
-  }
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
       {/* Background simple */}
@@ -68,14 +52,15 @@ export default function LandscapeTimer({
         bottom: 0,
         backgroundColor: '#0F0F10',
       }} />
+
       {/* Header générique sans flèche retour */}
       <Header
-        title="AMRAP TIMER"
-        subtitle={`Round ${currentRound} • ${isPaused ? 'PAUSED' : isRunning ? 'RUNNING' : 'READY'}`}
+        title="FOR TIME"
+        subtitle={isPaused ? 'PAUSED' : isRunning ? 'RUNNING' : 'READY'}
       />
 
-      <View style={{ 
-        flex: 1, 
+      <View style={{
+        flex: 1,
         flexDirection: 'row',
         paddingHorizontal: 32,
         paddingVertical: 24,
@@ -98,7 +83,7 @@ export default function LandscapeTimer({
               justifyContent: 'center',
             }}
           >
-            <LandscapeTimeDisplay 
+            <LandscapeTimeDisplay
               timeString={formatTime(remainingMilliseconds)}
               isPaused={isPaused}
               isOnFire={isOnFire}
@@ -116,7 +101,7 @@ export default function LandscapeTimer({
             zIndex: 10,
           }}>
             <SlideToAction
-              onSlideComplete={onResetTimer}
+              onSlideComplete={finishTimer || onResetTimer}
               label="FINISH"
               width={270}
               height={50}
@@ -171,7 +156,10 @@ export default function LandscapeTimer({
             </Text>
           </View>
 
-          <AddRoundButton onPress={incrementRound} />
+          {/* Bouton Add Round - Même que AMRAP */}
+          {incrementRound && (
+            <AddRoundButton onPress={incrementRound} />
+          )}
         </View>
       </View>
     </SafeAreaView>
