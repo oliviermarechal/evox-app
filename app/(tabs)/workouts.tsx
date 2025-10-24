@@ -1,139 +1,168 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { router } from 'expo-router';
-import WorkoutSessions from '@/components/workout/WorkoutSessions';
-import WorkoutBuilder from '@/components/workout/WorkoutBuilder';
-import { WorkoutSession } from '@/lib/workoutTypes';
 import { useScreenOrientation } from '@/hooks/useScreenOrientation';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { Workout, WorkoutBlock } from '@/lib/types';
+import { WorkoutStorage } from '@/lib/storage';
+import WorkoutList from '@/components/workout/WorkoutList';
+import WorkoutNameModal from '@/components/workout/WorkoutNameModal';
+import WorkoutDetailScreen from '@/components/workout/WorkoutDetailScreen';
 
 export default function WorkoutsScreen() {
-  // Force portrait orientation for workouts screen
-  useScreenOrientation(ScreenOrientation.OrientationLock.PORTRAIT);
-  
-  const [sessions, setSessions] = useState<WorkoutSession[]>([]);
-  const [showBuilder, setShowBuilder] = useState(false);
-  const [editingSession, setEditingSession] = useState<WorkoutSession | null>(null);
+  useScreenOrientation(ScreenOrientation.OrientationLock.PORTRAIT_UP);
 
-  const handleSaveSession = (session: WorkoutSession) => {
-    if (editingSession) {
-      // Update existing session
-      setSessions(sessions.map(s => s.id === session.id ? session : s));
-      setEditingSession(null);
-    } else {
-      // Add new session
-      setSessions([...sessions, session]);
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [currentWorkout, setCurrentWorkout] = useState<Workout | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadWorkouts();
+  }, []);
+
+  const loadWorkouts = async () => {
+    try {
+      setLoading(true);
+      const savedWorkouts = await WorkoutStorage.loadWorkouts();
+      setWorkouts(savedWorkouts);
+    } catch (error) {
+      console.error('Error loading workouts:', error);
+    } finally {
+      setLoading(false);
     }
-    setShowBuilder(false);
-  };
-
-  const handleEditSession = (session: WorkoutSession) => {
-    setEditingSession(session);
-    setShowBuilder(true);
-  };
-
-  const handleDeleteSession = (sessionId: string) => {
-    setSessions(sessions.filter(s => s.id !== sessionId));
-  };
-
-  const handleStartSession = (session: WorkoutSession) => {
-    // Navigate to session execution
-    router.push(`/workout-execution?sessionId=${session.id}` as any);
   };
 
   const handleCreateNew = () => {
-    setEditingSession(null);
-    setShowBuilder(true);
+    setShowNameModal(true);
   };
 
-  const handleCancelBuilder = () => {
-    setShowBuilder(false);
-    setEditingSession(null);
+  const handleWorkoutNameConfirm = async (name: string) => {
+    try {
+      const newWorkout = await WorkoutStorage.createWorkout({
+        name,
+        blocks: [],
+      });
+      setCurrentWorkout(newWorkout);
+      setShowNameModal(false);
+    } catch (error) {
+      console.error('Error creating workout:', error);
+    }
+  };
+
+  const handleWorkoutUpdated = async (updatedWorkout: Workout) => {
+    setCurrentWorkout(updatedWorkout);
+    await loadWorkouts(); // Recharger la liste des workouts
+  };
+
+  const handleBackToList = () => {
+    setCurrentWorkout(null);
+  };
+
+  const handleEditWorkout = (workout: Workout) => {
+    setCurrentWorkout(workout);
+  };
+
+  const handleDeleteWorkout = async (workoutId: string) => {
+    try {
+      await WorkoutStorage.deleteWorkout(workoutId);
+      await loadWorkouts(); // Recharger la liste
+    } catch (error) {
+      console.error('Error deleting workout:', error);
+    }
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-      {/* Header */}
-      <View style={{ 
-        flexDirection: 'row', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
-        paddingHorizontal: 24, 
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#87CEEB20'
+      {/* Background with subtle gradient */}
+      <View style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#0F0F10',
       }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <FontAwesome name="list" size={24} color="#FFD700" style={{ marginRight: 12 }} />
-          <Text style={{ color: '#FFD700', fontSize: 24, fontWeight: 'bold', letterSpacing: 1 }}>
-            WORKOUTS
-          </Text>
-        </View>
-        
-        <TouchableOpacity
-          onPress={handleCreateNew}
-          style={{
-            backgroundColor: '#87CEEB',
-            borderRadius: 12,
-            padding: 12,
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <FontAwesome name="plus" size={20} color="#000000" />
-        </TouchableOpacity>
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(135, 206, 235, 0.02)',
+        }} />
+      </View>
+
+      {/* Header Premium */}
+      <View style={{
+        paddingHorizontal: 24,
+        paddingVertical: 20,
+        alignItems: 'center',
+        zIndex: 5,
+      }}>
+        <Text style={{
+          color: '#F5F5DC',
+          fontSize: 32,
+          fontWeight: 'bold',
+          textAlign: 'center',
+          letterSpacing: 2,
+          textShadowColor: 'rgba(135, 206, 235, 0.3)',
+          textShadowOffset: { width: 0, height: 0 },
+          textShadowRadius: 15,
+          marginBottom: 8,
+        }}>
+          WORKOUTS
+        </Text>
+        <Text style={{
+          color: 'rgba(135, 206, 235, 0.8)',
+          fontSize: 14,
+          textAlign: 'center',
+          letterSpacing: 1,
+          opacity: 0.8,
+        }}>
+          CREATE • EXECUTE • TRACK
+        </Text>
       </View>
 
       {/* Main Content */}
-      <WorkoutSessions
-        sessions={sessions}
-        onStartSession={handleStartSession}
-        onEditSession={handleEditSession}
-        onDeleteSession={handleDeleteSession}
-        onCreateNew={handleCreateNew}
-      />
+      {currentWorkout ? (
+        <WorkoutDetailScreen
+          workout={currentWorkout}
+          onBack={handleBackToList}
+          onWorkoutUpdated={handleWorkoutUpdated}
+        />
+      ) : (
+        <View style={{ flex: 1, zIndex: 5 }}>
+          {loading ? (
+            <View style={{ 
+              flex: 1, 
+              justifyContent: 'center', 
+              alignItems: 'center' 
+            }}>
+              <Text style={{
+                color: 'rgba(135, 206, 235, 0.7)',
+                fontSize: 16,
+              }}>
+                Loading workouts...
+              </Text>
+            </View>
+          ) : (
+            <WorkoutList
+              workouts={workouts}
+              onCreateNew={handleCreateNew}
+              onEditWorkout={handleEditWorkout}
+              onDeleteWorkout={handleDeleteWorkout}
+            />
+          )}
+        </View>
+      )}
 
-      {/* Builder Modal */}
-      <Modal
-        visible={showBuilder}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-          <View style={{ 
-            flexDirection: 'row', 
-            alignItems: 'center', 
-            justifyContent: 'space-between', 
-            paddingHorizontal: 24, 
-            paddingVertical: 16,
-            borderBottomWidth: 1,
-            borderBottomColor: '#87CEEB20'
-          }}>
-            <Text style={{ color: '#FFD700', fontSize: 20, fontWeight: 'bold' }}>
-              {editingSession ? 'Edit Session' : 'Create Session'}
-            </Text>
-            <TouchableOpacity
-              onPress={handleCancelBuilder}
-              style={{
-                backgroundColor: '#000000',
-                borderRadius: 8,
-                padding: 8,
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <FontAwesome name="times" size={16} color="#87CEEB" />
-            </TouchableOpacity>
-          </View>
-          
-          <WorkoutBuilder
-            onSaveSession={handleSaveSession}
-            onCancel={handleCancelBuilder}
-          />
-        </SafeAreaView>
-      </Modal>
+      {/* Modals */}
+      <WorkoutNameModal
+        visible={showNameModal}
+        onClose={() => setShowNameModal(false)}
+        onConfirm={handleWorkoutNameConfirm}
+      />
     </SafeAreaView>
   );
 }

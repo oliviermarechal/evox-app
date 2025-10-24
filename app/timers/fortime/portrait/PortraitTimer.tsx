@@ -54,36 +54,6 @@ export default function PortraitTimer({
       }}>
         <View style={{
           position: 'absolute',
-          top: '20%',
-          left: '5%',
-          width: 300,
-          height: 300,
-          borderRadius: 150,
-          backgroundColor: 'rgba(135, 206, 235, 0.05)',
-          transform: [{ rotate: '-25deg' }],
-          shadowColor: '#87CEEB',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.2,
-          shadowRadius: 60,
-          elevation: 15,
-        }} />
-        <View style={{
-          position: 'absolute',
-          bottom: '10%',
-          right: '10%',
-          width: 200,
-          height: 200,
-          borderRadius: 100,
-          backgroundColor: 'rgba(255, 69, 0, 0.03)',
-          transform: [{ rotate: '45deg' }],
-          shadowColor: '#FF4500',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.15,
-          shadowRadius: 50,
-          elevation: 10,
-        }} />
-        <View style={{
-          position: 'absolute',
           top: 0,
           left: 0,
           right: 0,

@@ -7,9 +7,10 @@ import { FreeFinalScreen } from '@/components/timers/screens/FreeFinalScreen';
 
 interface TimerComponentProps {
   onResetTimer: () => void;
+  onBackPress?: () => void;
 }
 
-export default function TimerComponent({ onResetTimer }: TimerComponentProps) {
+export default function TimerComponent({ onResetTimer, onBackPress }: TimerComponentProps) {
   const { isLandscape } = useOrientation();
   const { state, actions, formatTime } = useFreeTimer();
 
@@ -27,6 +28,7 @@ export default function TimerComponent({ onResetTimer }: TimerComponentProps) {
   
   const commonProps = {
     onResetTimer,
+    onBackPress,
     // Passer l'état et les actions du hook
     totalMilliseconds: state.totalMilliseconds,
     isRunning: state.isRunning,

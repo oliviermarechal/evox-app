@@ -47,6 +47,7 @@ export default function FreeTimerScreen() {
   return (
     <TimerComponent
       onResetTimer={() => router.back()}
+      onBackPress={() => router.back()}
     />
   );
 }

@@ -10,6 +10,7 @@ import SlideToAction from '@/components/timers/SlideToAction';
 
 interface PortraitTimerProps {
   onResetTimer: () => void;
+  onBackPress?: () => void;
   totalMilliseconds: number;
   isRunning: boolean;
   isPaused: boolean;
@@ -24,6 +25,7 @@ interface PortraitTimerProps {
 
 export default function PortraitTimer({
   onResetTimer,
+  onBackPress,
   totalMilliseconds,
   isRunning,
   isPaused,
@@ -58,7 +60,7 @@ export default function PortraitTimer({
 
       {/* Header générique */}
       <Header 
-        onBackPress={() => router.back()}
+        onBackPress={onBackPress}
         title="FREE TIMER"
         subtitle={isPaused ? 'PAUSED' : isRunning ? 'RUNNING' : 'READY'}
       />

@@ -10,6 +10,7 @@ import SlideToAction from '@/components/timers/SlideToAction';
 
 interface LandscapeTimerProps {
   onResetTimer: () => void;
+  onBackPress?: () => void;
   totalMilliseconds: number;
   isRunning: boolean;
   isPaused: boolean;
@@ -24,6 +25,7 @@ interface LandscapeTimerProps {
 
 export default function LandscapeTimer({
   onResetTimer,
+  onBackPress,
   totalMilliseconds,
   isRunning,
   isPaused,
@@ -48,7 +50,7 @@ export default function LandscapeTimer({
       }} />
       
       <Header 
-        onBackPress={() => router.back()}
+        onBackPress={onBackPress}
         title="FREE TIMER"
         subtitle={isPaused ? 'PAUSED' : isRunning ? 'RUNNING' : 'READY'}
       />
