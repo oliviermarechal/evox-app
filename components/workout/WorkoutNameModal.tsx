@@ -38,7 +38,6 @@ export default function WorkoutNameModal({ visible, onClose, onConfirm }: Workou
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          {/* Header */}
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -112,7 +111,6 @@ export default function WorkoutNameModal({ visible, onClose, onConfirm }: Workou
               placeholderTextColor="rgba(135, 206, 235, 0.5)"
               autoFocus
               returnKeyType="done"
-              onSubmitEditing={handleConfirm}
             />
 
             <Text style={{

@@ -55,7 +55,11 @@ export default function BlockBuilderModal({
       setCurrentStep('exercises'); // Aller directement aux exercices si on édite
       
       // Initialiser les indices des WheelPickers
-      const durationIndex = durationOptions.findIndex(opt => opt.value === editingBlock.timerConfig.duration);
+      // Convert AMRAP duration from seconds to minutes for editing
+      const durationValue = editingBlock.timerType === 'AMRAP' 
+        ? Math.floor(editingBlock.timerConfig.duration! / 60) 
+        : editingBlock.timerConfig.duration;
+      const durationIndex = durationOptions.findIndex(opt => opt.value === durationValue);
       const roundsIndex = roundsOptions.findIndex(opt => opt.value === editingBlock.timerConfig.rounds);
       const intervalIndex = intervalOptions.findIndex(opt => opt.value === editingBlock.timerConfig.intervalDuration);
       const workTimeIndex = workTimeOptions.findIndex(opt => opt.value === editingBlock.timerConfig.workTime);
@@ -137,6 +141,20 @@ export default function BlockBuilderModal({
     return intervals;
   };
 
+  const generateAMRAPIntervals = () => {
+    const intervals = [];
+    
+    // Générer des intervalles de 1 à 60 minutes pour AMRAP
+    for (let minutes = 1; minutes <= 60; minutes++) {
+      intervals.push({ 
+        value: minutes, 
+        label: `${minutes} min` 
+      });
+    }
+    
+    return intervals;
+  };
+
   const generateForTimeIntervals = () => {
     const intervals = [];
     
@@ -171,10 +189,11 @@ export default function BlockBuilderModal({
   };
 
   const TIME_INTERVALS = generateTimeIntervals();
+  const AMRAP_INTERVALS = generateAMRAPIntervals();
   const ROUND_INTERVALS = generateRoundIntervals();
   const FOR_TIME_INTERVALS = generateForTimeIntervals();
   
-  const durationOptions = TIME_INTERVALS;
+  const durationOptions = selectedTimer === 'AMRAP' ? AMRAP_INTERVALS : TIME_INTERVALS;
   const roundsOptions = ROUND_INTERVALS;
   const intervalOptions = TIME_INTERVALS;
   const workTimeOptions = TIME_INTERVALS;
@@ -229,12 +248,18 @@ export default function BlockBuilderModal({
   };
 
   const handleSave = () => {
+    // Convert AMRAP duration from minutes to seconds for storage
+    const finalTimerConfig = { ...timerConfig };
+    if (selectedTimer === 'AMRAP') {
+      finalTimerConfig.duration = timerConfig.duration * 60; // Convert minutes to seconds
+    }
+    
     const block: Omit<WorkoutBlock, 'id'> = {
       name: `Block ${blockNumber} - ${selectedTimer}`,
       timerType: selectedTimer,
       exercises: selectedExercises,
       sets: sets,
-      timerConfig,
+      timerConfig: finalTimerConfig,
     };
     onSave(block);
     resetState();
@@ -424,6 +449,35 @@ export default function BlockBuilderModal({
               }}>
                 Set up your timer parameters
               </Text>
+
+              {/* Back to Exercises Link for Editing Mode */}
+              {editingBlock && (
+                <TouchableOpacity
+                  onPress={() => setCurrentStep('exercises')}
+                  style={{
+                    backgroundColor: 'rgba(135, 206, 235, 0.1)',
+                    borderRadius: 12,
+                    padding: 16,
+                    marginBottom: 24,
+                    borderWidth: 1,
+                    borderColor: 'rgba(135, 206, 235, 0.3)',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <FontAwesome name="list" size={16} color="#87CEEB" style={{ marginRight: 8 }} />
+                  <Text style={{
+                    color: '#87CEEB',
+                    fontSize: 14,
+                    fontWeight: '600',
+                    letterSpacing: 0.5,
+                  }}>
+                    Back to Exercises
+                  </Text>
+                  <FontAwesome name="chevron-right" size={12} color="#87CEEB" style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
+              )}
 
               {/* Timer Configuration */}
               <View style={{
@@ -967,6 +1021,35 @@ export default function BlockBuilderModal({
                 Add exercises to this block
               </Text>
 
+              {/* Timer Settings Link for Editing Mode */}
+              {editingBlock && (
+                <TouchableOpacity
+                  onPress={() => setCurrentStep('config')}
+                  style={{
+                    backgroundColor: 'rgba(135, 206, 235, 0.1)',
+                    borderRadius: 12,
+                    padding: 16,
+                    marginBottom: 24,
+                    borderWidth: 1,
+                    borderColor: 'rgba(135, 206, 235, 0.3)',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <FontAwesome name="clock-o" size={16} color="#87CEEB" style={{ marginRight: 8 }} />
+                  <Text style={{
+                    color: '#87CEEB',
+                    fontSize: 14,
+                    fontWeight: '600',
+                    letterSpacing: 0.5,
+                  }}>
+                    Edit Timer Settings
+                  </Text>
+                  <FontAwesome name="chevron-right" size={12} color="#87CEEB" style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
+              )}
+
               {/* Add Exercise Button */}
               <TouchableOpacity
                 onPress={() => setShowExerciseSelector(true)}
@@ -1016,7 +1099,35 @@ export default function BlockBuilderModal({
           gap: 16,
           padding: 24,
         }}>
-          {(currentStep === 'config' || currentStep === 'exercises') && (
+          {/* Cancel button for editing mode */}
+          {editingBlock && (
+            <TouchableOpacity
+              onPress={handleClose}
+              style={{
+                flex: 1,
+                backgroundColor: '#121212',
+                borderRadius: 16,
+                paddingVertical: 18,
+                paddingHorizontal: 24,
+                borderWidth: 1.5,
+                borderColor: 'rgba(245, 245, 220, 0.3)',
+                alignItems: 'center',
+                marginRight: 8,
+              }}
+            >
+              <Text style={{ 
+                color: '#F5F5DC', 
+                fontSize: 16, 
+                fontWeight: 'bold',
+                letterSpacing: 1,
+              }}>
+                CANCEL
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Back button for new blocks */}
+          {!editingBlock && (currentStep === 'config' || currentStep === 'exercises') && (
             <TouchableOpacity
               onPress={() => {
                 if (currentStep === 'config') {
@@ -1047,6 +1158,7 @@ export default function BlockBuilderModal({
               </Text>
             </TouchableOpacity>
           )}
+
           
           <TouchableOpacity
             onPress={() => {
@@ -1088,7 +1200,7 @@ export default function BlockBuilderModal({
               fontWeight: 'bold',
               letterSpacing: 2,
             }}>
-              {currentStep === 'config' ? 'NEXT' : 'SAVE'}
+              {editingBlock ? 'SAVE' : (currentStep === 'config' ? 'NEXT' : 'SAVE')}
             </Text>
           </TouchableOpacity>
         </View>

@@ -73,7 +73,7 @@ export default function WorkoutsScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }} edges={['top', 'left', 'right']}>
       {/* Background with subtle gradient */}
       <View style={{
         position: 'absolute',
@@ -93,29 +93,30 @@ export default function WorkoutsScreen() {
         }} />
       </View>
 
-      {/* Header Premium */}
+      {/* Header Premium - Compact */}
       <View style={{
         paddingHorizontal: 24,
-        paddingVertical: 20,
+        paddingTop: 8,
+        paddingBottom: 12,
         alignItems: 'center',
         zIndex: 5,
       }}>
         <Text style={{
           color: '#F5F5DC',
-          fontSize: 32,
+          fontSize: 28,
           fontWeight: 'bold',
           textAlign: 'center',
           letterSpacing: 2,
           textShadowColor: 'rgba(135, 206, 235, 0.3)',
           textShadowOffset: { width: 0, height: 0 },
           textShadowRadius: 15,
-          marginBottom: 8,
+          marginBottom: 4,
         }}>
           WORKOUTS
         </Text>
         <Text style={{
           color: 'rgba(135, 206, 235, 0.8)',
-          fontSize: 14,
+          fontSize: 12,
           textAlign: 'center',
           letterSpacing: 1,
           opacity: 0.8,
@@ -126,11 +127,13 @@ export default function WorkoutsScreen() {
 
       {/* Main Content */}
       {currentWorkout ? (
-        <WorkoutDetailScreen
-          workout={currentWorkout}
-          onBack={handleBackToList}
-          onWorkoutUpdated={handleWorkoutUpdated}
-        />
+        <View style={{ flex: 1, zIndex: 5 }}>
+          <WorkoutDetailScreen
+            workout={currentWorkout}
+            onBack={handleBackToList}
+            onWorkoutUpdated={handleWorkoutUpdated}
+          />
+        </View>
       ) : (
         <View style={{ flex: 1, zIndex: 5 }}>
           {loading ? (

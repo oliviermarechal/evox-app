@@ -176,55 +176,36 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
           </View>
         </View>
 
-        {/* Custom Exercise CTA */}
-        <View style={{ padding: 24, paddingBottom: 16 }}>
-          <TouchableOpacity
-            onPress={() => setShowCustomForm(!showCustomForm)}
-            style={{
-              backgroundColor: 'rgba(18, 18, 18, 0.8)',
-              borderRadius: 16,
-              padding: 20,
-              borderWidth: 1.5,
-              borderColor: '#87CEEB',
-              shadowColor: '#87CEEB',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.3,
-              shadowRadius: 12,
-              elevation: 6,
-              marginBottom: 16,
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-              <View style={{
-                backgroundColor: '#87CEEB',
-                borderRadius: 20,
-                padding: 8,
-                marginRight: 12,
+        {/* Custom Exercise CTA - Compact */}
+        {!showCustomForm && (
+          <View style={{ paddingHorizontal: 24, paddingBottom: 12 }}>
+            <TouchableOpacity
+              onPress={() => setShowCustomForm(true)}
+              style={{
+                backgroundColor: 'rgba(135, 206, 235, 0.1)',
+                borderRadius: 12,
+                padding: 12,
+                borderWidth: 1,
+                borderColor: 'rgba(135, 206, 235, 0.3)',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <FontAwesome name="plus" size={14} color="#87CEEB" />
+              <Text style={{
+                color: '#87CEEB',
+                fontSize: 14,
+                fontWeight: '600',
+                marginLeft: 8,
               }}>
-                <FontAwesome name="plus" size={16} color="#0F0F10" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{
-                  color: '#F5F5DC',
-                  fontSize: 16,
-                  fontWeight: 'bold',
-                  marginBottom: 4,
-                }}>
-                  Create Custom Exercise
-                </Text>
-                <Text style={{
-                  color: 'rgba(135, 206, 235, 0.7)',
-                  fontSize: 12,
-                }}>
-                  Add your own exercise with custom name and unit
-                </Text>
-              </View>
-              <FontAwesome name="chevron-right" size={14} color="rgba(135, 206, 235, 0.6)" />
-            </View>
-          </TouchableOpacity>
-        </View>
+                Create Custom Exercise
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-        {/* Search Input */}
+        {/* Search Input with Autocomplete */}
         <View style={{ paddingHorizontal: 24, paddingBottom: 16 }}>
           <View style={{
             backgroundColor: 'rgba(135, 206, 235, 0.08)',
@@ -234,27 +215,91 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
             paddingHorizontal: 16,
             borderWidth: 1,
             borderColor: 'rgba(135, 206, 235, 0.3)',
+            minHeight: 48,
           }}>
             <FontAwesome name="search" size={16} color="rgba(135, 206, 235, 0.6)" />
             <TextInput
               style={{
                 flex: 1,
-                padding: 16,
+                padding: 12,
                 color: '#F5F5DC',
                 fontSize: 16,
+                minHeight: 44,
               }}
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Search exercises..."
               placeholderTextColor="rgba(135, 206, 235, 0.5)"
-              autoFocus
+              autoFocus={false}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+              autoCorrect={false}
+              autoCapitalize="none"
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <TouchableOpacity 
+                onPress={() => setSearchQuery('')}
+                style={{ padding: 8, margin: -8 }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <FontAwesome name="times" size={16} color="rgba(135, 206, 235, 0.6)" />
               </TouchableOpacity>
             )}
           </View>
+          
+          {/* Autocomplete Results */}
+          {searchQuery.length > 0 && filteredExercises.length > 0 && (
+            <View style={{
+              backgroundColor: 'rgba(18, 18, 18, 0.95)',
+              borderRadius: 12,
+              marginTop: 8,
+              borderWidth: 1,
+              borderColor: 'rgba(135, 206, 235, 0.2)',
+              maxHeight: 200,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}>
+              <ScrollView 
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                {filteredExercises.slice(0, 5).map((exercise, index) => (
+                  <TouchableOpacity
+                    key={exercise.id}
+                    onPress={() => handleSelect(exercise)}
+                    style={{
+                      padding: 12,
+                      borderBottomWidth: index < Math.min(filteredExercises.length, 5) - 1 ? 1 : 0,
+                      borderBottomColor: 'rgba(135, 206, 235, 0.1)',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={{
+                        color: '#F5F5DC',
+                        fontSize: 14,
+                        fontWeight: '500',
+                      }}>
+                        {exercise.name}
+                      </Text>
+                      <Text style={{
+                        color: 'rgba(135, 206, 235, 0.6)',
+                        fontSize: 12,
+                        marginTop: 2,
+                      }}>
+                        {exercise.unit}
+                      </Text>
+                    </View>
+                    <FontAwesome name="plus" size={12} color="rgba(135, 206, 235, 0.6)" />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
 
         {/* Category Filter */}
@@ -315,90 +360,80 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
           </ScrollView>
         </View>
 
-        {/* Custom Exercise Form */}
+        {/* Custom Exercise Form - Compact */}
         {showCustomForm && (
           <View style={{
             backgroundColor: 'rgba(18, 18, 18, 0.8)',
-            margin: 24,
-            borderRadius: 16,
-            padding: 20,
+            marginHorizontal: 24,
+            marginBottom: 16,
+            borderRadius: 12,
+            padding: 16,
             borderWidth: 1,
             borderColor: 'rgba(135, 206, 235, 0.2)',
-            shadowColor: '#87CEEB',
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.15,
-            shadowRadius: 8,
-            elevation: 4,
           }}>
-            <Text style={{
-              color: '#F5F5DC',
-              fontSize: 16,
-              fontWeight: '600',
-              marginBottom: 16,
-              textAlign: 'center',
-            }}>
-              Create Custom Exercise
-            </Text>
-            
-            <View style={{ marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
               <Text style={{
-                color: 'rgba(135, 206, 235, 0.8)',
+                color: '#F5F5DC',
                 fontSize: 14,
-                marginBottom: 8,
+                fontWeight: '600',
+                flex: 1,
               }}>
-                Exercise Name
+                Create Custom Exercise
               </Text>
+              <TouchableOpacity
+                onPress={() => setShowCustomForm(false)}
+                style={{ padding: 4 }}
+              >
+                <FontAwesome name="times" size={14} color="rgba(135, 206, 235, 0.6)" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
               <TextInput
                 style={{
+                  flex: 1,
                   backgroundColor: 'rgba(135, 206, 235, 0.08)',
-                  borderRadius: 12,
-                  padding: 16,
+                  borderRadius: 8,
+                  padding: 12,
                   color: '#F5F5DC',
-                  fontSize: 16,
+                  fontSize: 14,
                   borderWidth: 1,
                   borderColor: 'rgba(135, 206, 235, 0.3)',
                 }}
                 value={customExerciseName}
                 onChangeText={setCustomExerciseName}
-                placeholder="Enter exercise name..."
+                placeholder="Exercise name..."
                 placeholderTextColor="rgba(135, 206, 235, 0.5)"
-                autoFocus
+                autoFocus={false}
+                returnKeyType="done"
+                autoCorrect={false}
+                autoCapitalize="words"
               />
-            </View>
-            
-            <View style={{ marginBottom: 20 }}>
-              <Text style={{
-                color: 'rgba(135, 206, 235, 0.8)',
-                fontSize: 14,
-                marginBottom: 8,
-              }}>
-                Unit
-              </Text>
+              
               <View style={{
                 backgroundColor: 'rgba(135, 206, 235, 0.08)',
-                borderRadius: 12,
+                borderRadius: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(135, 206, 235, 0.3)',
-                padding: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
               }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={{ flexDirection: 'row', gap: 8, padding: 4 }}>
-                    {availableUnits.map((unit) => (
+                  <View style={{ flexDirection: 'row', gap: 4 }}>
+                    {availableUnits.slice(0, 4).map((unit) => (
                       <TouchableOpacity
                         key={unit.value}
                         onPress={() => setCustomExerciseUnit(unit.value)}
                         style={{
                           backgroundColor: customExerciseUnit === unit.value ? '#87CEEB' : 'transparent',
-                          borderRadius: 8,
-                          paddingHorizontal: 12,
-                          paddingVertical: 8,
-                          borderWidth: 1,
-                          borderColor: customExerciseUnit === unit.value ? '#87CEEB' : 'rgba(135, 206, 235, 0.3)',
+                          borderRadius: 6,
+                          paddingHorizontal: 8,
+                          paddingVertical: 4,
                         }}
                       >
                         <Text style={{
                           color: customExerciseUnit === unit.value ? '#0F0F10' : 'rgba(135, 206, 235, 0.8)',
-                          fontSize: 12,
+                          fontSize: 10,
                           fontWeight: '500',
                         }}>
                           {unit.label}
@@ -408,46 +443,21 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
                   </View>
                 </ScrollView>
               </View>
-            </View>
-            
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <TouchableOpacity
-                onPress={() => setShowCustomForm(false)}
-                style={{
-                  flex: 1,
-                  backgroundColor: 'rgba(135, 206, 235, 0.1)',
-                  borderRadius: 12,
-                  padding: 16,
-                  alignItems: 'center',
-                  borderWidth: 1,
-                  borderColor: 'rgba(135, 206, 235, 0.3)',
-                }}
-              >
-                <Text style={{
-                  color: 'rgba(135, 206, 235, 0.8)',
-                  fontSize: 14,
-                  fontWeight: '600',
-                }}>
-                  CANCEL
-                </Text>
-              </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={handleCreateCustom}
                 disabled={!customExerciseName.trim()}
                 style={{
-                  flex: 1,
                   backgroundColor: customExerciseName.trim() ? '#87CEEB' : 'rgba(135, 206, 235, 0.3)',
-                  borderRadius: 12,
-                  padding: 16,
+                  borderRadius: 8,
+                  padding: 12,
                   alignItems: 'center',
-                  borderWidth: 1,
-                  borderColor: customExerciseName.trim() ? '#87CEEB' : 'rgba(135, 206, 235, 0.3)',
+                  minWidth: 60,
                 }}
               >
                 <Text style={{
                   color: customExerciseName.trim() ? '#0F0F10' : 'rgba(135, 206, 235, 0.5)',
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: '600',
                 }}>
                   CREATE
@@ -457,13 +467,14 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
           </View>
         )}
 
-        {/* Exercise List */}
-        <FlatList
-          data={filteredExercises}
-          renderItem={renderExercise}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 24, paddingTop: 0 }}
-          showsVerticalScrollIndicator={false}
+        {/* Exercise List - Only show when not searching */}
+        {searchQuery.length === 0 && (
+          <FlatList
+            data={filteredExercises}
+            renderItem={renderExercise}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ padding: 24, paddingTop: 0 }}
+            showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             filteredExercises.length > 0 && !searchQuery && !selectedCategory ? (
               <View style={{
@@ -573,7 +584,8 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
               </TouchableOpacity>
             </View>
           }
-        />
+          />
+        )}
       </View>
     </Modal>
   );

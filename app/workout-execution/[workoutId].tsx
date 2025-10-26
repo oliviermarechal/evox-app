@@ -79,7 +79,8 @@ export default function WorkoutExecutionScreen() {
     let timerInfo = '';
     switch (block.timerType) {
       case 'AMRAP':
-        timerInfo = `${block.timerConfig.duration}min • As Many Rounds As Possible`;
+        const amrapMinutes = Math.floor(block.timerConfig.duration! / 60);
+        timerInfo = `${amrapMinutes}min • As Many Rounds As Possible`;
         break;
       case 'EMOM':
         timerInfo = `${block.timerConfig.rounds} rounds × ${block.timerConfig.intervalDuration}s • Every Minute On the Minute`;
@@ -168,11 +169,11 @@ export default function WorkoutExecutionScreen() {
 
     switch (currentBlock.timerType) {
       case 'AMRAP':
-        // Convert duration (minutes) to minutes and seconds
+        // Convert duration (seconds) to minutes and seconds
         const duration = currentBlock.timerConfig.duration!;
         const amrapConfig = {
-          minutes: Math.floor(duration),
-          seconds: 0,
+          minutes: Math.floor(duration / 60),
+          seconds: duration % 60,
         };
         return (
           <AMRAPTimer
@@ -246,7 +247,6 @@ export default function WorkoutExecutionScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
-      {/* Background with subtle gradient */}
       <View style={{
         position: 'absolute',
         top: 0,

@@ -34,27 +34,27 @@ export default function WorkoutList({
   };
 
   const renderWorkout = ({ item }: { item: Workout }) => (
-    <TouchableOpacity
-      onPress={() => onEditWorkout(item)}
-      style={{
-        backgroundColor: 'rgba(135, 206, 235, 0.05)',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: 'rgba(135, 206, 235, 0.2)',
-        shadowColor: '#87CEEB',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-      }}
-    >
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <View style={{ flex: 1 }}>
+    <View style={{
+      backgroundColor: 'rgba(18, 18, 18, 0.8)',
+      borderRadius: 16,
+      padding: 18,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(135, 206, 235, 0.2)',
+      shadowColor: '#87CEEB',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 4,
+    }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <TouchableOpacity 
+          onPress={() => onEditWorkout(item)}
+          style={{ flex: 1 }}
+        >
           <Text style={{
             color: '#F5F5DC',
-            fontSize: 18,
+            fontSize: 17,
             fontWeight: 'bold',
             marginBottom: 4,
           }}>
@@ -62,46 +62,74 @@ export default function WorkoutList({
           </Text>
           <Text style={{
             color: 'rgba(135, 206, 235, 0.7)',
-            fontSize: 14,
-            marginBottom: 8,
+            fontSize: 13,
+            marginBottom: 6,
+            lineHeight: 18,
           }}>
             {item.blocks.length} block{item.blocks.length !== 1 ? 's' : ''}
           </Text>
           <Text style={{
             color: 'rgba(135, 206, 235, 0.5)',
-            fontSize: 12,
+            fontSize: 11,
+            textTransform: 'uppercase',
+            letterSpacing: 0.8,
           }}>
             Created {formatDate(item.createdAt)}
           </Text>
-        </View>
+        </TouchableOpacity>
         
-        <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flexDirection: 'row', gap: 6 }}>
           <TouchableOpacity
-            onPress={() => router.push(`/workout-execution/${item.id}`)}
+            onPress={item.blocks.length > 0 ? () => router.push(`/workout-execution/${item.id}`) : undefined}
+            disabled={item.blocks.length === 0}
             style={{
-              backgroundColor: 'rgba(135, 206, 235, 0.15)',
-              borderRadius: 8,
-              padding: 8,
-              borderWidth: 1,
-              borderColor: 'rgba(135, 206, 235, 0.3)',
+              backgroundColor: '#121212',
+              borderRadius: 12,
+              paddingVertical: 8,
+              paddingHorizontal: 12,
+              borderWidth: 1.5,
+              borderColor: item.blocks.length > 0 ? 'rgba(135, 206, 235, 0.3)' : 'rgba(135, 206, 235, 0.1)',
+              flexDirection: 'row',
+              alignItems: 'center',
+              shadowColor: item.blocks.length > 0 ? '#87CEEB' : 'transparent',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: item.blocks.length > 0 ? 0.3 : 0,
+              shadowRadius: 8,
+              elevation: item.blocks.length > 0 ? 4 : 0,
+              opacity: item.blocks.length > 0 ? 1 : 0.4,
             }}
           >
-            <FontAwesome name="play" size={16} color="#87CEEB" />
+            <FontAwesome name="play" size={12} color={item.blocks.length > 0 ? "#F5F5DC" : "rgba(245, 245, 220, 0.4)"} style={{ marginRight: 4 }} />
+            <Text style={{
+              color: item.blocks.length > 0 ? '#F5F5DC' : 'rgba(245, 245, 220, 0.4)',
+              fontSize: 12,
+              fontWeight: '600',
+              letterSpacing: 0.5,
+            }}>
+              START
+            </Text>
           </TouchableOpacity>
           
           <TouchableOpacity
             onPress={() => onDeleteWorkout(item.id)}
             style={{
-              backgroundColor: 'rgba(255, 107, 107, 0.1)',
-              borderRadius: 8,
-              padding: 8,
+              backgroundColor: '#121212',
+              borderRadius: 12,
+              padding: 10,
+              borderWidth: 1.5,
+              borderColor: 'rgba(255, 107, 107, 0.3)',
+              shadowColor: '#FF6B6B',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 2,
             }}
           >
             <FontAwesome name="trash" size={16} color="#FF6B6B" />
           </TouchableOpacity>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   return (

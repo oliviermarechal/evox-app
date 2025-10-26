@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { Exercise, ExerciseTemplate } from '@/lib/types';
 
@@ -14,6 +14,9 @@ export default function ExerciseCard({ exercise, onUpdate, onRemove }: ExerciseC
   const [instructions, setInstructions] = useState(exercise.instructions || '');
   const [videoUrl, setVideoUrl] = useState(exercise.videoUrl || '');
   const [selectedUnit, setSelectedUnit] = useState(exercise.unit);
+  const [showVolumeModal, setShowVolumeModal] = useState(false);
+  const [showInstructionsModal, setShowInstructionsModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
 
   const handleVolumeChange = (text: string) => {
     setVolume(text);
@@ -48,9 +51,7 @@ export default function ExerciseCard({ exercise, onUpdate, onRemove }: ExerciseC
     });
   };
 
-  // Récupérer les unités alternatives depuis le template (si disponible)
   const getAvailableUnits = () => {
-    // Pour l'instant, on retourne les unités communes selon le type d'exercice
     const commonUnits = {
       'kg': ['kg', 'lbs'],
       'lbs': ['lbs', 'kg'],
@@ -136,87 +137,287 @@ export default function ExerciseCard({ exercise, onUpdate, onRemove }: ExerciseC
         </TouchableOpacity>
       </View>
 
-      {/* Volume Input - Compact */}
+      {/* Volume Input - Native Modal */}
       <View style={{ marginBottom: 8 }}>
-        <View style={{
-          backgroundColor: 'rgba(135, 206, 235, 0.08)',
-          borderRadius: 10,
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderWidth: 1,
-          borderColor: 'rgba(135, 206, 235, 0.2)',
-        }}>
-          <TextInput
-            style={{
-              flex: 1,
-              padding: 10,
-              color: '#F5F5DC',
-              fontSize: 13,
-              fontWeight: '600',
-            }}
-            value={volume}
-            onChangeText={handleVolumeChange}
-            placeholder={`Enter ${exercise.unit}...`}
-            placeholderTextColor="rgba(245, 245, 220, 0.5)"
-            keyboardType="numeric"
-            returnKeyType="done"
-          />
+        <TouchableOpacity
+          onPress={() => setShowVolumeModal(true)}
+          style={{
+            backgroundColor: 'rgba(135, 206, 235, 0.08)',
+            borderRadius: 10,
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: 'rgba(135, 206, 235, 0.2)',
+            padding: 10,
+          }}
+        >
+          <Text style={{
+            flex: 1,
+            color: volume ? '#F5F5DC' : 'rgba(245, 245, 220, 0.5)',
+            fontSize: 13,
+            fontWeight: '600',
+          }}>
+            {volume || `Enter ${exercise.unit}...`}
+          </Text>
           <Text style={{
             color: 'rgba(135, 206, 235, 0.7)',
             fontSize: 10,
-            paddingRight: 10,
             textTransform: 'uppercase',
             letterSpacing: 0.8,
             fontWeight: '600',
           }}>
             {exercise.unit}
           </Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
-      {/* Instructions - Ultra Compact */}
+      {/* Instructions - Native Modal */}
       <View style={{ marginBottom: 6 }}>
-        <TextInput
+        <TouchableOpacity
+          onPress={() => setShowInstructionsModal(true)}
           style={{
             backgroundColor: 'rgba(135, 206, 235, 0.06)',
             borderRadius: 8,
             padding: 8,
-            color: '#F5F5DC',
-            fontSize: 11,
             borderWidth: 1,
             borderColor: 'rgba(135, 206, 235, 0.15)',
             minHeight: 32,
-            textAlignVertical: 'top',
           }}
-          value={instructions}
-          onChangeText={handleInstructionsChange}
-          placeholder="Instructions (optional)..."
-          placeholderTextColor="rgba(135, 206, 235, 0.4)"
-          multiline
-          returnKeyType="done"
-        />
+        >
+          <Text style={{
+            color: instructions ? '#F5F5DC' : 'rgba(135, 206, 235, 0.4)',
+            fontSize: 11,
+          }}>
+            {instructions || 'Instructions (optional)...'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Video URL - Ultra Compact */}
+      {/* Video URL - Native Modal */}
       <View>
-        <TextInput
+        <TouchableOpacity
+          onPress={() => setShowVideoModal(true)}
           style={{
             backgroundColor: 'rgba(135, 206, 235, 0.06)',
             borderRadius: 8,
             padding: 8,
-            color: '#F5F5DC',
-            fontSize: 11,
             borderWidth: 1,
             borderColor: 'rgba(135, 206, 235, 0.15)',
           }}
-          value={videoUrl}
-          onChangeText={handleVideoUrlChange}
-          placeholder="Video link (optional)..."
-          placeholderTextColor="rgba(135, 206, 235, 0.4)"
-          keyboardType="url"
-          returnKeyType="done"
-        />
+        >
+          <Text style={{
+            color: videoUrl ? '#F5F5DC' : 'rgba(135, 206, 235, 0.4)',
+            fontSize: 11,
+          }}>
+            {videoUrl || 'Video link (optional)...'}
+          </Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Volume Modal */}
+      <Modal
+        visible={showVolumeModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          handleVolumeChange(volume);
+          setShowVolumeModal(false);
+        }}
+      >
+        <TouchableWithoutFeedback onPress={() => {
+          handleVolumeChange(volume);
+          setShowVolumeModal(false);
+        }}>
+          <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              >
+                <View style={{
+                  backgroundColor: 'rgba(18, 18, 18, 0.95)',
+                  borderTopLeftRadius: 20,
+                  borderTopRightRadius: 20,
+                  padding: 20,
+                  borderTopWidth: 1,
+                  borderTopColor: 'rgba(135, 206, 235, 0.2)',
+                }}>
+                  <Text style={{
+                    color: '#F5F5DC',
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    marginBottom: 16,
+                    textAlign: 'center',
+                  }}>
+                    Enter {exercise.unit}
+                  </Text>
+                  <TextInput
+                    style={{
+                      backgroundColor: 'rgba(135, 206, 235, 0.08)',
+                      borderRadius: 12,
+                      padding: 16,
+                      color: '#F5F5DC',
+                      fontSize: 16,
+                      borderWidth: 1,
+                      borderColor: 'rgba(135, 206, 235, 0.3)',
+                    }}
+                    value={volume}
+                    onChangeText={setVolume}
+                    placeholder={`Enter ${exercise.unit}...`}
+                    placeholderTextColor="rgba(245, 245, 220, 0.5)"
+                    keyboardType="numeric"
+                    autoFocus
+                    returnKeyType="done"
+                    onSubmitEditing={() => {
+                      handleVolumeChange(volume);
+                      setShowVolumeModal(false);
+                    }}
+                    onBlur={() => {
+                      handleVolumeChange(volume);
+                      setShowVolumeModal(false);
+                    }}
+                  />
+                </View>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Instructions Modal */}
+      <Modal
+        visible={showInstructionsModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          handleInstructionsChange(instructions);
+          setShowInstructionsModal(false);
+        }}
+      >
+        <TouchableWithoutFeedback onPress={() => {
+          handleInstructionsChange(instructions);
+          setShowInstructionsModal(false);
+        }}>
+          <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              >
+                <View style={{
+                  backgroundColor: 'rgba(18, 18, 18, 0.95)',
+                  borderTopLeftRadius: 20,
+                  borderTopRightRadius: 20,
+                  padding: 20,
+                  borderTopWidth: 1,
+                  borderTopColor: 'rgba(135, 206, 235, 0.2)',
+                }}>
+                  <Text style={{
+                    color: '#F5F5DC',
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    marginBottom: 16,
+                    textAlign: 'center',
+                  }}>
+                    Instructions
+                  </Text>
+                  <TextInput
+                    style={{
+                      backgroundColor: 'rgba(135, 206, 235, 0.08)',
+                      borderRadius: 12,
+                      padding: 16,
+                      color: '#F5F5DC',
+                      fontSize: 16,
+                      borderWidth: 1,
+                      borderColor: 'rgba(135, 206, 235, 0.3)',
+                      minHeight: 100,
+                      textAlignVertical: 'top',
+                    }}
+                    value={instructions}
+                    onChangeText={setInstructions}
+                    placeholder="Enter instructions..."
+                    placeholderTextColor="rgba(245, 245, 220, 0.5)"
+                    multiline
+                    autoFocus
+                    returnKeyType="default"
+                    onBlur={() => {
+                      handleInstructionsChange(instructions);
+                      setShowInstructionsModal(false);
+                    }}
+                  />
+                </View>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Video URL Modal */}
+      <Modal
+        visible={showVideoModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          handleVideoUrlChange(videoUrl);
+          setShowVideoModal(false);
+        }}
+      >
+        <TouchableWithoutFeedback onPress={() => {
+          handleVideoUrlChange(videoUrl);
+          setShowVideoModal(false);
+        }}>
+          <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <KeyboardAvoidingView 
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              >
+                <View style={{
+                  backgroundColor: 'rgba(18, 18, 18, 0.95)',
+                  borderTopLeftRadius: 20,
+                  borderTopRightRadius: 20,
+                  padding: 20,
+                  borderTopWidth: 1,
+                  borderTopColor: 'rgba(135, 206, 235, 0.2)',
+                }}>
+                  <Text style={{
+                    color: '#F5F5DC',
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    marginBottom: 16,
+                    textAlign: 'center',
+                  }}>
+                    Video Link
+                  </Text>
+                  <TextInput
+                    style={{
+                      backgroundColor: 'rgba(135, 206, 235, 0.08)',
+                      borderRadius: 12,
+                      padding: 16,
+                      color: '#F5F5DC',
+                      fontSize: 16,
+                      borderWidth: 1,
+                      borderColor: 'rgba(135, 206, 235, 0.3)',
+                    }}
+                    value={videoUrl}
+                    onChangeText={setVideoUrl}
+                    placeholder="Enter video URL..."
+                    placeholderTextColor="rgba(245, 245, 220, 0.5)"
+                    keyboardType="url"
+                    autoFocus
+                    returnKeyType="done"
+                    onSubmitEditing={() => {
+                      handleVideoUrlChange(videoUrl);
+                      setShowVideoModal(false);
+                    }}
+                    onBlur={() => {
+                      handleVideoUrlChange(videoUrl);
+                      setShowVideoModal(false);
+                    }}
+                  />
+                </View>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }

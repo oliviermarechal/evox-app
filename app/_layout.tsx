@@ -15,6 +15,11 @@ export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
 
+SplashScreen.setOptions({
+  duration: 1000,
+  fade: true,
+});
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
