@@ -6,22 +6,13 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "env": {
-        "PNPM_FLAGS": "--no-frozen-lockfile"
-      }
+      "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal",
-      "env": {
-        "PNPM_FLAGS": "--no-frozen-lockfile"
-      }
+      "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
-      "env": {
-        "PNPM_FLAGS": "--no-frozen-lockfile"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
