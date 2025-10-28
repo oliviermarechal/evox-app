@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 export interface AMRAPConfig {
   minutes: number;
@@ -49,6 +50,7 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     if (!isRunning && !isPaused) {
       setIsRunning(true);
       setHasStarted(true);
+      activateKeepAwakeAsync();
       intervalRef.current = setInterval(() => {
         setRemainingMilliseconds(prev => {
           const newRemaining = prev - 10;
@@ -65,6 +67,7 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     } else if (isPaused) {
       setIsPaused(false);
       setIsRunning(true);
+      activateKeepAwakeAsync();
       intervalRef.current = setInterval(() => {
         setRemainingMilliseconds(prev => {
           const newRemaining = prev - 10;
@@ -85,6 +88,7 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     if (isRunning) {
       setIsRunning(false);
       setIsPaused(true);
+      deactivateKeepAwake();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
@@ -94,6 +98,7 @@ export function useAMRAPTimer(config: AMRAPConfig) {
   const resetTimer = useCallback(() => {
     setIsRunning(false);
     setIsPaused(false);
+    deactivateKeepAwake();
     setRemainingMilliseconds(config.minutes * 60 * 1000 + config.seconds * 1000);
     setCurrentRound(1);
     setFinalTime(null);
@@ -123,6 +128,7 @@ export function useAMRAPTimer(config: AMRAPConfig) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      deactivateKeepAwake();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
@@ -142,6 +148,7 @@ export function useAMRAPTimer(config: AMRAPConfig) {
   const finishTimer = useCallback(() => {
     setIsRunning(false);
     setIsPaused(false);
+    deactivateKeepAwake();
     
     // Calculate total elapsed time
     const totalTime = (config.minutes * 60 + config.seconds) * 1000;

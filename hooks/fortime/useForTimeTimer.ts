@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 export interface ForTimeConfig {
   minutes: number;
@@ -47,6 +48,7 @@ export function useForTimeTimer(config: ForTimeConfig) {
     }
     setIsRunning(true);
     setIsPaused(false);
+    activateKeepAwakeAsync();
     intervalRef.current = setInterval(() => {
       setRemainingMilliseconds(prev => {
         const newRemaining = prev - 10;
@@ -69,6 +71,7 @@ export function useForTimeTimer(config: ForTimeConfig) {
   const pauseTimer = useCallback(() => {
     setIsRunning(false);
     setIsPaused(true);
+    deactivateKeepAwake();
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -84,12 +87,14 @@ export function useForTimeTimer(config: ForTimeConfig) {
     }
     setIsRunning(false);
     setIsPaused(false);
+    deactivateKeepAwake();
     setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000 - remainingMilliseconds));
   }, [remainingMilliseconds, config.minutes, config.seconds, formatTime]);
 
   const resetTimer = useCallback(() => {
     setIsRunning(false);
     setIsPaused(false);
+    deactivateKeepAwake();
     setRemainingMilliseconds(config.minutes * 60 * 1000 + config.seconds * 1000);
     setFinalTime(null);
     setIsOnFire(false);
@@ -114,6 +119,7 @@ export function useForTimeTimer(config: ForTimeConfig) {
 
   useEffect(() => {
     return () => {
+      deactivateKeepAwake();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }

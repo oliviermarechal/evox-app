@@ -14,7 +14,7 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [customExerciseName, setCustomExerciseName] = useState('');
-  const [customExerciseUnit, setCustomExerciseUnit] = useState('reps');
+  const [customExerciseUnits, setCustomExerciseUnits] = useState<string[]>(['reps']);
 
   const categories = [
     { key: 'strength', name: 'Strength', icon: 'bolt', color: '#F44336' },
@@ -58,18 +58,30 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
     setSelectedCategory(null);
   };
 
+  const toggleUnit = (unit: string) => {
+    setCustomExerciseUnits(prev => {
+      if (prev.includes(unit)) {
+        // Si c'est la dernière unité, on ne peut pas la désélectionner
+        if (prev.length === 1) return prev;
+        return prev.filter(u => u !== unit);
+      } else {
+        return [...prev, unit];
+      }
+    });
+  };
+
   const handleCreateCustom = () => {
-    if (customExerciseName.trim()) {
+    if (customExerciseName.trim() && customExerciseUnits.length > 0) {
       const customTemplate: ExerciseTemplate = {
         id: `custom_${Date.now()}`,
         name: customExerciseName.trim(),
-        unit: customExerciseUnit as any,
+        unit: customExerciseUnits[0] as any, // Utilise la première unité comme principale
         category: 'cardio', // Default category
         isCustom: true,
       };
       onSelect(customTemplate);
       setCustomExerciseName('');
-      setCustomExerciseUnit('reps');
+      setCustomExerciseUnits(['reps']);
       setShowCustomForm(false);
     }
   };
@@ -79,7 +91,7 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
     setSelectedCategory(null);
     setShowCustomForm(false);
     setCustomExerciseName('');
-    setCustomExerciseUnit('reps');
+    setCustomExerciseUnits(['reps']);
     onClose();
   };
 
@@ -360,21 +372,21 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
           </ScrollView>
         </View>
 
-        {/* Custom Exercise Form - Compact */}
+        {/* Custom Exercise Form - Full Width Layout */}
         {showCustomForm && (
           <View style={{
             backgroundColor: 'rgba(18, 18, 18, 0.8)',
             marginHorizontal: 24,
             marginBottom: 16,
             borderRadius: 12,
-            padding: 16,
+            padding: 20,
             borderWidth: 1,
             borderColor: 'rgba(135, 206, 235, 0.2)',
           }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <Text style={{
                 color: '#F5F5DC',
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: '600',
                 flex: 1,
               }}>
@@ -384,86 +396,120 @@ export default function ExerciseSelector({ visible, onClose, onSelect }: Exercis
                 onPress={() => setShowCustomForm(false)}
                 style={{ padding: 4 }}
               >
-                <FontAwesome name="times" size={14} color="rgba(135, 206, 235, 0.6)" />
+                <FontAwesome name="times" size={16} color="rgba(135, 206, 235, 0.6)" />
               </TouchableOpacity>
             </View>
             
-            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-              <TextInput
-                style={{
-                  flex: 1,
-                  backgroundColor: 'rgba(135, 206, 235, 0.08)',
-                  borderRadius: 8,
-                  padding: 12,
-                  color: '#F5F5DC',
-                  fontSize: 14,
-                  borderWidth: 1,
-                  borderColor: 'rgba(135, 206, 235, 0.3)',
-                }}
-                value={customExerciseName}
-                onChangeText={setCustomExerciseName}
-                placeholder="Exercise name..."
-                placeholderTextColor="rgba(135, 206, 235, 0.5)"
-                autoFocus={false}
-                returnKeyType="done"
-                autoCorrect={false}
-                autoCapitalize="words"
-              />
-              
+            {/* Input Field - Full Width */}
+            <TextInput
+              style={{
+                width: '100%',
+                backgroundColor: 'rgba(135, 206, 235, 0.08)',
+                borderRadius: 8,
+                paddingHorizontal: 16,
+                paddingVertical: 16,
+                color: '#F5F5DC',
+                fontSize: 16,
+                borderWidth: 1,
+                borderColor: 'rgba(135, 206, 235, 0.3)',
+                minHeight: 56,
+                textAlignVertical: 'center',
+                marginBottom: 16,
+              }}
+              value={customExerciseName}
+              onChangeText={setCustomExerciseName}
+              placeholder="Exercise name..."
+              placeholderTextColor="rgba(135, 206, 235, 0.5)"
+              autoFocus={false}
+              returnKeyType="done"
+              autoCorrect={false}
+              autoCapitalize="sentences"
+              blurOnSubmit={true}
+              keyboardType="default"
+              multiline={false}
+              numberOfLines={1}
+              selectTextOnFocus={false}
+              clearButtonMode="while-editing"
+              enablesReturnKeyAutomatically={true}
+            />
+            
+            {/* Units Selection - Full Width */}
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{
+                color: 'rgba(135, 206, 235, 0.8)',
+                fontSize: 14,
+                fontWeight: '500',
+                marginBottom: 8,
+              }}>
+                Available Units
+              </Text>
               <View style={{
                 backgroundColor: 'rgba(135, 206, 235, 0.08)',
                 borderRadius: 8,
                 borderWidth: 1,
                 borderColor: 'rgba(135, 206, 235, 0.3)',
-                paddingHorizontal: 8,
-                paddingVertical: 4,
+                padding: 12,
               }}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={{ flexDirection: 'row', gap: 4 }}>
-                    {availableUnits.slice(0, 4).map((unit) => (
-                      <TouchableOpacity
-                        key={unit.value}
-                        onPress={() => setCustomExerciseUnit(unit.value)}
-                        style={{
-                          backgroundColor: customExerciseUnit === unit.value ? '#87CEEB' : 'transparent',
-                          borderRadius: 6,
-                          paddingHorizontal: 8,
-                          paddingVertical: 4,
-                        }}
-                      >
-                        <Text style={{
-                          color: customExerciseUnit === unit.value ? '#0F0F10' : 'rgba(135, 206, 235, 0.8)',
-                          fontSize: 10,
-                          fontWeight: '500',
-                        }}>
-                          {unit.label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </ScrollView>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {availableUnits.map((unit) => (
+                    <TouchableOpacity
+                      key={unit.value}
+                      onPress={() => toggleUnit(unit.value)}
+                      style={{
+                        backgroundColor: customExerciseUnits.includes(unit.value) ? '#87CEEB' : 'transparent',
+                        borderRadius: 8,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderWidth: 1,
+                        borderColor: customExerciseUnits.includes(unit.value) ? '#87CEEB' : 'rgba(135, 206, 235, 0.3)',
+                        opacity: customExerciseUnits.length === 1 && customExerciseUnits.includes(unit.value) ? 0.7 : 1,
+                      }}
+                    >
+                      <Text style={{
+                        color: customExerciseUnits.includes(unit.value) ? '#0F0F10' : 'rgba(135, 206, 235, 0.8)',
+                        fontSize: 12,
+                        fontWeight: '500',
+                      }}>
+                        {unit.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {customExerciseUnits.length === 1 && (
+                  <Text style={{
+                    color: 'rgba(135, 206, 235, 0.5)',
+                    fontSize: 10,
+                    marginTop: 8,
+                    fontStyle: 'italic',
+                  }}>
+                    At least one unit must be selected
+                  </Text>
+                )}
               </View>
-              
-              <TouchableOpacity
-                onPress={handleCreateCustom}
-                disabled={!customExerciseName.trim()}
-                style={{
-                  backgroundColor: customExerciseName.trim() ? '#87CEEB' : 'rgba(135, 206, 235, 0.3)',
-                  borderRadius: 8,
-                  padding: 12,
-                  alignItems: 'center',
-                  minWidth: 60,
-                }}
-              >
-                <Text style={{
-                  color: customExerciseName.trim() ? '#0F0F10' : 'rgba(135, 206, 235, 0.5)',
-                  fontSize: 12,
-                  fontWeight: '600',
-                }}>
-                  CREATE
-                </Text>
-              </TouchableOpacity>
             </View>
+            
+            {/* Create Button - Full Width */}
+            <TouchableOpacity
+              onPress={handleCreateCustom}
+              disabled={!customExerciseName.trim() || customExerciseUnits.length === 0}
+              style={{
+                backgroundColor: (customExerciseName.trim() && customExerciseUnits.length > 0) ? '#87CEEB' : 'rgba(135, 206, 235, 0.3)',
+                borderRadius: 8,
+                paddingVertical: 16,
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: 56,
+                width: '100%',
+              }}
+            >
+              <Text style={{
+                color: (customExerciseName.trim() && customExerciseUnits.length > 0) ? '#0F0F10' : 'rgba(135, 206, 235, 0.5)',
+                fontSize: 16,
+                fontWeight: '600',
+              }}>
+                CREATE EXERCISE
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 

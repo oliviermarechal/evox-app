@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 interface EMOMConfig {
   rounds: number;
@@ -53,6 +54,7 @@ export function useEMOMTimer(config: EMOMConfig): EMOMTimerState & EMOMTimerActi
     
     setIsRunning(true);
     setIsPaused(false);
+    activateKeepAwakeAsync();
     
     intervalRef.current = setInterval(() => {
       setRemainingMilliseconds(prev => {
@@ -92,6 +94,7 @@ export function useEMOMTimer(config: EMOMConfig): EMOMTimerState & EMOMTimerActi
     setIsRunning(false);
     setIsPaused(true);
     pausedTimeRef.current = Date.now();
+    deactivateKeepAwake();
     
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -101,6 +104,7 @@ export function useEMOMTimer(config: EMOMConfig): EMOMTimerState & EMOMTimerActi
   const resetTimer = useCallback(() => {
     setIsRunning(false);
     setIsPaused(false);
+    deactivateKeepAwake();
     setRemainingMilliseconds(config.duration * 1000); // EMOM: Use config.duration
     setFinalTime(null);
     setCurrentRound(1); // Start at round 1
@@ -115,6 +119,7 @@ export function useEMOMTimer(config: EMOMConfig): EMOMTimerState & EMOMTimerActi
   const finishTimer = useCallback(() => {
     setIsRunning(false);
     setIsPaused(false);
+    deactivateKeepAwake();
     
     // Calculate total elapsed time
     const now = Date.now();
@@ -135,6 +140,7 @@ export function useEMOMTimer(config: EMOMConfig): EMOMTimerState & EMOMTimerActi
 
   useEffect(() => {
     return () => {
+      deactivateKeepAwake();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }

@@ -8,7 +8,6 @@ import { Workout, WorkoutBlock } from '@/lib/types';
 import { WorkoutStorage } from '@/lib/storage';
 import { useOrientation } from '@/hooks/useOrientation';
 
-// Import des TimerComponents
 import AMRAPTimer from '@/app/timers/amrap/TimerComponent';
 import EMOMTimer from '@/app/timers/emom/TimerComponent';
 import ForTimeTimer from '@/app/timers/fortime/TimerComponent';
@@ -19,12 +18,9 @@ export default function WorkoutExecutionScreen() {
   const { workoutId } = useLocalSearchParams<{ workoutId: string }>();
   const { isLandscape, dimensions } = useOrientation();
   
-  // Permettre l'orientation libre pendant l'exécution des workouts
   useEffect(() => {
-    // Débloquer l'orientation pour permettre le libre choix
     ScreenOrientation.unlockAsync();
     
-    // Nettoyer en quittant l'écran
     return () => {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     };

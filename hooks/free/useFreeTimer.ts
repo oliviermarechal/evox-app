@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 export interface FreeTimerState {
   totalMilliseconds: number;
@@ -40,6 +41,7 @@ export function useFreeTimer() {
     if (!isRunning && !isPaused) {
       setIsRunning(true);
       setTotalMilliseconds(0); // Reset to 0 when starting fresh
+      activateKeepAwakeAsync();
       intervalRef.current = setInterval(() => {
         setTotalMilliseconds(prev => {
           const newTotal = prev + 10;
@@ -53,6 +55,7 @@ export function useFreeTimer() {
     } else if (isPaused) {
       setIsPaused(false);
       setIsRunning(true);
+      activateKeepAwakeAsync();
       intervalRef.current = setInterval(() => {
         setTotalMilliseconds(prev => {
           const newTotal = prev + 10;
@@ -70,6 +73,7 @@ export function useFreeTimer() {
     if (isRunning) {
       setIsRunning(false);
       setIsPaused(true);
+      deactivateKeepAwake();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
@@ -86,12 +90,14 @@ export function useFreeTimer() {
     }
     setIsRunning(false);
     setIsPaused(false);
+    deactivateKeepAwake();
     setFinalTime(formatTime(totalMilliseconds));
   }, [totalMilliseconds, formatTime]);
 
   const resetTimer = useCallback(() => {
     setIsRunning(false);
     setIsPaused(false);
+    deactivateKeepAwake();
     setTotalMilliseconds(0);
     setFinalTime(null);
     setIsOnFire(false);
@@ -116,6 +122,7 @@ export function useFreeTimer() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      deactivateKeepAwake();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }

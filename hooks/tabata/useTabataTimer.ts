@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 interface TabataConfig {
   rounds: number;
@@ -64,6 +65,7 @@ export function useTabataTimer(config: TabataConfig): TabataTimerState & TabataT
     
     setIsRunning(true);
     setIsPaused(false);
+    activateKeepAwakeAsync();
     
     intervalRef.current = setInterval(() => {
       setPhaseTimeRemaining(prev => {
@@ -109,6 +111,7 @@ export function useTabataTimer(config: TabataConfig): TabataTimerState & TabataT
     setIsRunning(false);
     setIsPaused(true);
     pausedTimeRef.current = Date.now();
+    deactivateKeepAwake();
     
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -118,6 +121,7 @@ export function useTabataTimer(config: TabataConfig): TabataTimerState & TabataT
   const resetTimer = useCallback(() => {
     setIsRunning(false);
     setIsPaused(false);
+    deactivateKeepAwake();
     setRemainingMilliseconds(config.workTime * 1000);
     setFinalTime(null);
     setCurrentRound(1);
@@ -134,6 +138,7 @@ export function useTabataTimer(config: TabataConfig): TabataTimerState & TabataT
   const finishTimer = useCallback(() => {
     setIsRunning(false);
     setIsPaused(false);
+    deactivateKeepAwake();
     
     const now = Date.now();
     const elapsed = now - startTimeRef.current;
@@ -152,6 +157,7 @@ export function useTabataTimer(config: TabataConfig): TabataTimerState & TabataT
 
   useEffect(() => {
     return () => {
+      deactivateKeepAwake();
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }

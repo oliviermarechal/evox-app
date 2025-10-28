@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FontAwesome } from '@expo/vector-icons';
 import { AddRoundButton } from '@/components/timers/AddRoundButton';
 import { LandscapeTimeDisplay } from '@/components/timers/displays/LandscapeTimeDisplay';
 import { AMRAPFinalScreen } from '@/components/timers/screens/AMRAPFinalScreen';
