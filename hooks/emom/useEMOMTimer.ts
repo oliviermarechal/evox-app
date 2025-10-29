@@ -30,32 +30,31 @@ export function useEMOMTimer(config: EMOMConfig): EMOMTimerState & EMOMTimerActi
     duration: config.duration,
   });
 
-  const startTimer = useCallback(() => {
-    timer.startTimer();
-    activateKeepAwakeAsync();
-  }, [timer]);
-
-  const pauseTimer = useCallback(() => {
-    timer.pauseTimer();
-    deactivateKeepAwake();
-  }, [timer]);
-
-  const resetTimer = useCallback(() => {
-    timer.resetTimer();
-    deactivateKeepAwake();
-  }, [timer]);
-
-  const finishTimer = useCallback(() => {
-    timer.finishTimer();
-    deactivateKeepAwake();
-  }, [timer]);
-
-  // Cleanup on unmount
+  // Activer le keep awake dès le montage du composant et le garder actif même en pause
   useEffect(() => {
+    activateKeepAwakeAsync();
+    
+    // Désactiver uniquement au démontage
     return () => {
       deactivateKeepAwake();
     };
   }, []);
+
+  const startTimer = useCallback(() => {
+    timer.startTimer();
+  }, [timer]);
+
+  const pauseTimer = useCallback(() => {
+    timer.pauseTimer();
+  }, [timer]);
+
+  const resetTimer = useCallback(() => {
+    timer.resetTimer();
+  }, [timer]);
+
+  const finishTimer = useCallback(() => {
+    timer.finishTimer();
+  }, [timer]);
 
   return {
     remainingMilliseconds: timer.remainingMilliseconds,

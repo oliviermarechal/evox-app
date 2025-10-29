@@ -83,7 +83,7 @@ export default function HomeScreen() {
           alignItems: 'center',
         }}>
           <SportCard
-            title="FREE"
+            title="FREE TIMER"
             subtitle="Stopwatch"
             iconName="play"
             onPress={() => router.push('/timers/free')}

@@ -568,11 +568,11 @@ export class EMOMTimerService {
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
-    
+
     this.intervalId = setInterval(() => {
       this.updateRemainingTime();
       this.notifyListeners();
-    }, 1000); // Mise à jour toutes les secondes
+    }, 1000);
   }
   
   private stopInterval() {

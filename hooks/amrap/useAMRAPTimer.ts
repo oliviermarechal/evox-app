@@ -32,19 +32,26 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     seconds: config.seconds,
   });
 
+  // Activer le keep awake dès le montage du composant et le garder actif même en pause
+  useEffect(() => {
+    activateKeepAwakeAsync();
+    
+    // Désactiver uniquement au démontage
+    return () => {
+      deactivateKeepAwake();
+    };
+  }, []);
+
   const startTimer = useCallback(() => {
     timer.startTimer();
-    activateKeepAwakeAsync();
   }, [timer]);
 
   const pauseTimer = useCallback(() => {
     timer.pauseTimer();
-    deactivateKeepAwake();
   }, [timer]);
 
   const resetTimer = useCallback(() => {
     timer.resetTimer();
-    deactivateKeepAwake();
   }, [timer]);
 
   const incrementRound = useCallback(() => {
@@ -53,15 +60,7 @@ export function useAMRAPTimer(config: AMRAPConfig) {
 
   const finishTimer = useCallback(() => {
     timer.finishTimer();
-    deactivateKeepAwake();
   }, [timer]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      deactivateKeepAwake();
-    };
-  }, []);
 
   const state: AMRAPTimerState = {
     remainingMilliseconds: timer.remainingMilliseconds,

@@ -48,6 +48,12 @@
         "projectId": "8bd028f1-37f4-4948-9431-4adb881d45bb"
       }
     },
-    "owner": "loxx"
+    "owner": "loxx",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8bd028f1-37f4-4948-9431-4adb881d45bb"
+    }
   }
 }

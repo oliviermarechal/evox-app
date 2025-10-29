@@ -50,14 +50,22 @@ export function useFreeTimer() {
     return () => clearInterval(interval);
   }, [timer.isRunning, timer]);
 
+  // Activer le keep awake dès le montage du composant et le garder actif même en pause
+  useEffect(() => {
+    activateKeepAwakeAsync();
+    
+    // Désactiver uniquement au démontage
+    return () => {
+      deactivateKeepAwake();
+    };
+  }, []);
+
   const startTimer = useCallback(() => {
     timer.start();
-    activateKeepAwakeAsync();
   }, [timer]);
 
   const pauseTimer = useCallback(() => {
     timer.pause();
-    deactivateKeepAwake();
   }, [timer]);
 
   const incrementRound = useCallback(() => {
@@ -66,7 +74,6 @@ export function useFreeTimer() {
 
   const finishTimer = useCallback(() => {
     timer.pause();
-    deactivateKeepAwake();
     setFinalTime(formatTime(preciseMilliseconds));
   }, [timer, formatTime, preciseMilliseconds]);
 
@@ -76,7 +83,6 @@ export function useFreeTimer() {
     setCurrentRound(0);
     setPreciseMilliseconds(0);
     hasAutoStarted.current = false;
-    deactivateKeepAwake();
   }, [timer]);
 
   useEffect(() => {
@@ -87,12 +93,6 @@ export function useFreeTimer() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      deactivateKeepAwake();
-    };
   }, []);
 
   const state: FreeTimerState = {
