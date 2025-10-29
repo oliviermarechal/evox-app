@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { useIncrementTimer } from '@/hooks/useTimerService';
 
 export interface FreeTimerState {
   totalMilliseconds: number;
   isRunning: boolean;
   isPaused: boolean;
   finalTime: string | null;
-  isOnFire: boolean;
   currentRound: number;
 }
 
@@ -19,15 +19,12 @@ export interface FreeTimerActions {
 }
 
 export function useFreeTimer() {
-  const [totalMilliseconds, setTotalMilliseconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [finalTime, setFinalTime] = useState<string | null>(null);
-  const [isOnFire, setIsOnFire] = useState(false);
   const [currentRound, setCurrentRound] = useState(0);
+  const [preciseMilliseconds, setPreciseMilliseconds] = useState(0);
   const hasAutoStarted = useRef(false);
 
-  const intervalRef = useRef<any>(null);
+  const timer = useIncrementTimer({});
 
   const formatTime = useCallback((ms: number): string => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -37,78 +34,51 @@ export function useFreeTimer() {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
   }, []);
 
+  useEffect(() => {
+    if (!timer.isRunning) return;
+
+    const interval = setInterval(() => {
+      // Accéder aux propriétés internes du timer
+      const internalState = timer.getInternalState?.();
+      if (internalState) {
+        const now = Date.now();
+        const elapsedMs = now - internalState.startTime - internalState.totalPausedDuration;
+        setPreciseMilliseconds(Math.max(0, elapsedMs));
+      }
+    }, 10);
+
+    return () => clearInterval(interval);
+  }, [timer.isRunning, timer]);
+
   const startTimer = useCallback(() => {
-    if (!isRunning && !isPaused) {
-      setIsRunning(true);
-      setTotalMilliseconds(0); // Reset to 0 when starting fresh
-      activateKeepAwakeAsync();
-      intervalRef.current = setInterval(() => {
-        setTotalMilliseconds(prev => {
-          const newTotal = prev + 10;
-          // Effet "on fire" après 1 heure
-          if (newTotal >= 3600000 && !isOnFire) {
-            setIsOnFire(true);
-          }
-          return newTotal;
-        });
-      }, 10);
-    } else if (isPaused) {
-      setIsPaused(false);
-      setIsRunning(true);
-      activateKeepAwakeAsync();
-      intervalRef.current = setInterval(() => {
-        setTotalMilliseconds(prev => {
-          const newTotal = prev + 10;
-          // Effet "on fire" après 1 heure
-          if (newTotal >= 3600000 && !isOnFire) {
-            setIsOnFire(true);
-          }
-          return newTotal;
-        });
-      }, 10);
-    }
-  }, [isRunning, isPaused, isOnFire]);
+    timer.start();
+    activateKeepAwakeAsync();
+  }, [timer]);
 
   const pauseTimer = useCallback(() => {
-    if (isRunning) {
-      setIsRunning(false);
-      setIsPaused(true);
-      deactivateKeepAwake();
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
-  }, [isRunning]);
+    timer.pause();
+    deactivateKeepAwake();
+  }, [timer]);
 
   const incrementRound = useCallback(() => {
     setCurrentRound(prev => prev + 1);
   }, []);
 
   const finishTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    setIsRunning(false);
-    setIsPaused(false);
+    timer.pause();
     deactivateKeepAwake();
-    setFinalTime(formatTime(totalMilliseconds));
-  }, [totalMilliseconds, formatTime]);
+    setFinalTime(formatTime(preciseMilliseconds));
+  }, [timer, formatTime, preciseMilliseconds]);
 
   const resetTimer = useCallback(() => {
-    setIsRunning(false);
-    setIsPaused(false);
-    deactivateKeepAwake();
-    setTotalMilliseconds(0);
+    timer.reset();
     setFinalTime(null);
-    setIsOnFire(false);
     setCurrentRound(0);
+    setPreciseMilliseconds(0);
     hasAutoStarted.current = false;
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-  }, []);
+    deactivateKeepAwake();
+  }, [timer]);
 
-  // Auto-start timer when component mounts (only once)
   useEffect(() => {
     if (!hasAutoStarted.current) {
       hasAutoStarted.current = true;
@@ -117,24 +87,19 @@ export function useFreeTimer() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, []); // Dépendances vides pour ne se déclencher qu'une fois
+  }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       deactivateKeepAwake();
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
     };
   }, []);
 
   const state: FreeTimerState = {
-    totalMilliseconds,
-    isRunning,
-    isPaused,
+    totalMilliseconds: preciseMilliseconds,
+    isRunning: timer.isRunning,
+    isPaused: timer.isPaused,
     finalTime,
-    isOnFire,
     currentRound,
   };
 

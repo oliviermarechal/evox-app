@@ -4,11 +4,9 @@ import { View, Text } from 'react-native';
 export function LandscapeTimeDisplay({
   timeString,
   isPaused = false,
-  isOnFire = false,
 }: {
   timeString: string;
   isPaused?: boolean;
-  isOnFire?: boolean;
 }) {
   return (
     <View>
@@ -21,7 +19,7 @@ export function LandscapeTimeDisplay({
           textAlign: 'center',
           textShadowColor: isPaused ? 'rgba(245, 245, 220, 0.3)' : 'rgba(135, 206, 235, 0.4)',
           textShadowOffset: { width: 0, height: 0 },
-          textShadowRadius: isOnFire ? 50 : 30,
+          textShadowRadius: 30,
           letterSpacing: 2,
           lineHeight: 124,
           fontFamily: 'monospace',

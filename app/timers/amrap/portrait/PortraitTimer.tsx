@@ -20,7 +20,6 @@ interface PortraitTimerProps {
   isPaused: boolean;
   currentRound: number;
   finalTime: string | null;
-  isOnFire: boolean;
   startTimer: () => void;
   pauseTimer: () => void;
   resetTimer: () => void;
@@ -37,7 +36,6 @@ export default function PortraitTimer({
   isPaused,
   currentRound,
   finalTime,
-  isOnFire,
   startTimer,
   pauseTimer,
   resetTimer,
@@ -103,22 +101,21 @@ export default function PortraitTimer({
                 height: 350,
                 borderRadius: 175,
                 borderWidth: 1.5,
-                borderColor: isOnFire ? '#FF4500' : 'rgba(135, 206, 235, 0.6)',
+                borderColor: 'rgba(135, 206, 235, 0.6)',
                 backgroundColor: '#000000',
                 alignItems: 'center',
                 justifyContent: 'center',
-                shadowColor: isOnFire ? '#FF4500' : '#87CEEB',
+                shadowColor: '#87CEEB',
                 shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: isOnFire ? 1.0 : 0.3,
-                shadowRadius: isOnFire ? 50 : 20,
-                elevation: isOnFire ? 50 : 12,
+                shadowOpacity: 0.3,
+                shadowRadius: 20,
+                elevation: 12,
               }}
             >
               {/* PortraitTimeDisplay réutilisable */}
               <PortraitTimeDisplay 
                 timeString={formatTime(remainingMilliseconds)}
                 isPaused={isPaused}
-                isOnFire={isOnFire}
               />
             </TouchableOpacity>
         </View>

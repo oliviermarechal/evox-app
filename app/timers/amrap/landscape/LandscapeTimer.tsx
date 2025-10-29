@@ -20,7 +20,6 @@ interface LandscapeTimerProps {
   isPaused: boolean;
   currentRound: number;
   finalTime: string | null;
-  isOnFire: boolean;
   startTimer: () => void;
   pauseTimer: () => void;
   resetTimer: () => void;
@@ -37,7 +36,6 @@ export default function LandscapeTimer({
   isPaused,
   currentRound,
   finalTime,
-  isOnFire,
   startTimer,
   pauseTimer,
   resetTimer,
@@ -102,7 +100,6 @@ export default function LandscapeTimer({
             <LandscapeTimeDisplay 
               timeString={formatTime(remainingMilliseconds)}
               isPaused={isPaused}
-              isOnFire={isOnFire}
             />
           </TouchableOpacity>
 

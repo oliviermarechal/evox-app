@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { useForTimeTimer as useForTimeTimerService } from '@/hooks/useTimerService';
 
 export interface ForTimeConfig {
   minutes: number;
@@ -24,115 +25,50 @@ export interface ForTimeTimerActions {
 }
 
 export function useForTimeTimer(config: ForTimeConfig) {
-  const [remainingMilliseconds, setRemainingMilliseconds] = useState(config.minutes * 60 * 1000 + config.seconds * 1000);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [finalTime, setFinalTime] = useState<string | null>(null);
-  const [isOnFire, setIsOnFire] = useState(false);
-  const [currentRound, setCurrentRound] = useState(0);
-  const hasAutoStarted = useRef(false);
-
-  const intervalRef = useRef<any>(null);
-
-  const formatTime = useCallback((ms: number): string => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    const centiseconds = Math.floor((ms % 1000) / 10);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
-  }, []);
+  // Utiliser le nouveau service de timer
+  const timer = useForTimeTimerService({
+    minutes: config.minutes,
+    seconds: config.seconds,
+  });
 
   const startTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    setIsRunning(true);
-    setIsPaused(false);
+    timer.startTimer();
     activateKeepAwakeAsync();
-    intervalRef.current = setInterval(() => {
-      setRemainingMilliseconds(prev => {
-        const newRemaining = prev - 10;
-        if (newRemaining <= 0) {
-          clearInterval(intervalRef.current);
-          setIsRunning(false);
-          setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000));
-          return 0;
-        }
-        // Effet "on fire" quand il reste moins de 10% du temps
-        const totalTime = config.minutes * 60 * 1000 + config.seconds * 1000;
-        if (newRemaining <= totalTime * 0.1 && !isOnFire) {
-          setIsOnFire(true);
-        }
-        return newRemaining;
-      });
-    }, 10);
-  }, [config.minutes, config.seconds, formatTime, isOnFire]);
+  }, [timer]);
 
   const pauseTimer = useCallback(() => {
-    setIsRunning(false);
-    setIsPaused(true);
+    timer.pauseTimer();
     deactivateKeepAwake();
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-  }, []);
-
-  const incrementRound = useCallback(() => {
-    setCurrentRound(prev => prev + 1);
-  }, []);
-
-  const finishTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    setIsRunning(false);
-    setIsPaused(false);
-    deactivateKeepAwake();
-    setFinalTime(formatTime(config.minutes * 60 * 1000 + config.seconds * 1000 - remainingMilliseconds));
-  }, [remainingMilliseconds, config.minutes, config.seconds, formatTime]);
+  }, [timer]);
 
   const resetTimer = useCallback(() => {
-    setIsRunning(false);
-    setIsPaused(false);
+    timer.resetTimer();
     deactivateKeepAwake();
-    setRemainingMilliseconds(config.minutes * 60 * 1000 + config.seconds * 1000);
-    setFinalTime(null);
-    setIsOnFire(false);
-    setCurrentRound(0);
-    hasAutoStarted.current = false;
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-  }, [config.minutes, config.seconds]);
+  }, [timer]);
 
+  const incrementRound = useCallback(() => {
+    timer.incrementRound();
+  }, [timer]);
 
-  // Auto-start timer when component mounts (only once)
-  useEffect(() => {
-    if (!hasAutoStarted.current) {
-      hasAutoStarted.current = true;
-      const timer = setTimeout(() => {
-        startTimer();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+  const finishTimer = useCallback(() => {
+    timer.finishTimer();
+    deactivateKeepAwake();
+  }, [timer]);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       deactivateKeepAwake();
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
     };
   }, []);
 
   const state: ForTimeTimerState = {
-    remainingMilliseconds,
-    isRunning,
-    isPaused,
-    finalTime,
-    isOnFire,
-    currentRound,
+    remainingMilliseconds: timer.remainingMilliseconds,
+    isRunning: timer.isRunning,
+    isPaused: timer.isPaused,
+    finalTime: timer.finalTime,
+    isOnFire: timer.isOnFire,
+    currentRound: timer.currentRound,
   };
 
   const actions: ForTimeTimerActions = {
@@ -143,5 +79,5 @@ export function useForTimeTimer(config: ForTimeConfig) {
     finishTimer,
   };
 
-  return { state, actions, formatTime };
+  return { state, actions, formatTime: timer.formatTime };
 }

@@ -27,7 +27,6 @@ export default function TimerComponent({ config, onResetTimer }: TimerComponentP
     isPaused: state.isPaused,
     currentRound: state.currentRound,
     finalTime: state.finalTime,
-    isOnFire: state.isOnFire,
     startTimer: actions.startTimer,
     pauseTimer: actions.pauseTimer,
     resetTimer: actions.resetTimer,

@@ -33,7 +33,6 @@ export default function TimerComponent({ onResetTimer, onBackPress }: TimerCompo
     totalMilliseconds: state.totalMilliseconds,
     isRunning: state.isRunning,
     isPaused: state.isPaused,
-    isOnFire: state.isOnFire,
     currentRound: state.currentRound,
     startTimer: actions.startTimer,
     pauseTimer: actions.pauseTimer,

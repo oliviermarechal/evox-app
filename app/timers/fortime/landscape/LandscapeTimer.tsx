@@ -86,7 +86,6 @@ export default function LandscapeTimer({
             <LandscapeTimeDisplay
               timeString={formatTime(remainingMilliseconds)}
               isPaused={isPaused}
-              isOnFire={isOnFire}
             />
           </TouchableOpacity>
 
