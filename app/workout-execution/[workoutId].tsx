@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -13,6 +13,8 @@ import EMOMTimer from '@/app/timers/emom/TimerComponent';
 import ForTimeTimer from '@/app/timers/fortime/TimerComponent';
 import FreeTimer from '@/app/timers/free/TimerComponent';
 import TabataTimer from '@/app/timers/tabata/TimerComponent';
+import PortraitReady from '@/components/timers/screens/PortraitReady';
+import LandscapeReady from '@/components/timers/screens/LandscapeReady';
 
 export default function WorkoutExecutionScreen() {
   const { workoutId } = useLocalSearchParams<{ workoutId: string }>();
@@ -31,6 +33,10 @@ export default function WorkoutExecutionScreen() {
   const [isBlockActive, setIsBlockActive] = useState(false);
   const [isBlockCompleted, setIsBlockCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [isCountdown, setIsCountdown] = useState(false);
+  const [countdownValue, setCountdownValue] = useState(10);
+  const [isCountdownPaused, setIsCountdownPaused] = useState(false);
+  const countdownIntervalRef = useRef<any>(null);
 
   useEffect(() => {
     loadWorkout();
@@ -50,9 +56,83 @@ export default function WorkoutExecutionScreen() {
   const currentBlock = workout?.blocks[currentBlockIndex];
   const isLastBlock = currentBlockIndex === (workout?.blocks.length || 0) - 1;
 
+  const startCountdown = useCallback(() => {
+    setIsCountdown(true);
+    setCountdownValue(10);
+    setIsCountdownPaused(false);
+    
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+    
+    countdownIntervalRef.current = setInterval(() => {
+      setCountdownValue(prev => {
+        if (prev <= 1) {
+          setIsCountdown(false);
+          setIsBlockActive(true);
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+          }
+          return 10;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
   const handleStartBlock = () => {
-    setIsBlockActive(true);
+    startCountdown();
   };
+
+  const handleSkipCountdown = useCallback(() => {
+    setIsCountdown(false);
+    setIsBlockActive(true);
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+  }, []);
+
+  const handleToggleCountdownPause = useCallback(() => {
+    if (isCountdownPaused) {
+      // Reprendre le countdown
+      setIsCountdownPaused(false);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+      countdownIntervalRef.current = setInterval(() => {
+        setCountdownValue(prev => {
+          if (prev <= 1) {
+            setIsCountdown(false);
+            setIsBlockActive(true);
+            if (countdownIntervalRef.current) {
+              clearInterval(countdownIntervalRef.current);
+            }
+            return 10;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      // Mettre en pause le countdown
+      setIsCountdownPaused(true);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    }
+  }, [isCountdownPaused]);
+
+  const handleReadyToStart = useCallback(() => {
+    startCountdown();
+  }, [startCountdown]);
+
+  // Cleanup du countdown au démontage
+  useEffect(() => {
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, []);
 
   const handleBlockComplete = () => {
     setIsBlockActive(false);
@@ -68,6 +148,47 @@ export default function WorkoutExecutionScreen() {
       setCurrentBlockIndex(prev => prev + 1);
       setIsBlockCompleted(false);
       setShowCelebration(false);
+      setIsCountdown(false);
+      setCountdownValue(10);
+      setIsCountdownPaused(false);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    }
+  };
+
+  // Fonction pour obtenir la config du timer pour le countdown screen
+  const getTimerConfig = (block: WorkoutBlock): { minutes: number; seconds: number } | undefined => {
+    switch (block.timerType) {
+      case 'AMRAP':
+        const duration = block.timerConfig.duration!;
+        return {
+          minutes: Math.floor(duration / 60),
+          seconds: duration % 60,
+        };
+      case 'EMOM':
+        const intervalDuration = block.timerConfig.intervalDuration!;
+        return {
+          minutes: Math.floor(intervalDuration / 60),
+          seconds: intervalDuration % 60,
+        };
+      case 'ForTime':
+        if (block.timerConfig.targetTime) {
+          const targetTime = block.timerConfig.targetTime;
+          return {
+            minutes: Math.floor(targetTime / 60),
+            seconds: targetTime % 60,
+          };
+        }
+        return undefined; // Free timer, pas de config
+      case 'Tabata':
+        const workTime = block.timerConfig.workTime!;
+        return {
+          minutes: Math.floor(workTime / 60),
+          seconds: workTime % 60,
+        };
+      default:
+        return undefined;
     }
   };
 
@@ -261,7 +382,48 @@ export default function WorkoutExecutionScreen() {
         }} />
       </View>
 
-      {isBlockActive ? (
+      {isCountdown ? (
+        // Countdown Screen
+        isLandscape ? (
+          <LandscapeReady
+            title={currentBlock.timerType}
+            config={currentBlock ? getTimerConfig(currentBlock) : undefined}
+            onStartCountdown={handleReadyToStart}
+            onBack={() => {
+              setIsCountdown(false);
+              setCountdownValue(10);
+              setIsCountdownPaused(false);
+              if (countdownIntervalRef.current) {
+                clearInterval(countdownIntervalRef.current);
+              }
+            }}
+            onSkipCountdown={handleSkipCountdown}
+            countdownValue={countdownValue}
+            isCountdown={isCountdown}
+            isPaused={isCountdownPaused}
+            onTogglePause={handleToggleCountdownPause}
+          />
+        ) : (
+          <PortraitReady
+            title={currentBlock.timerType}
+            config={currentBlock ? getTimerConfig(currentBlock) : undefined}
+            onStartCountdown={handleReadyToStart}
+            onBack={() => {
+              setIsCountdown(false);
+              setCountdownValue(10);
+              setIsCountdownPaused(false);
+              if (countdownIntervalRef.current) {
+                clearInterval(countdownIntervalRef.current);
+              }
+            }}
+            onSkipCountdown={handleSkipCountdown}
+            countdownValue={countdownValue}
+            isCountdown={isCountdown}
+            isPaused={isCountdownPaused}
+            onTogglePause={handleToggleCountdownPause}
+          />
+        )
+      ) : isBlockActive ? (
         // Timer Component - Full screen access
         <View style={{ 
           position: 'absolute',
