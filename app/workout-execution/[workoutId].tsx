@@ -1,42 +1,45 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { Workout, WorkoutBlock } from '@/lib/types';
+import { Workout } from '@/lib/types';
 import { WorkoutStorage } from '@/lib/storage';
 import { useOrientation } from '@/hooks/useOrientation';
+import { useCountdown } from '@/hooks/workout/useCountdown';
+import { getTimerConfig } from '@/utils/workoutUtils';
 
-import AMRAPTimer from '@/app/timers/amrap/TimerComponent';
-import EMOMTimer from '@/app/timers/emom/TimerComponent';
-import ForTimeTimer from '@/app/timers/fortime/TimerComponent';
-import FreeTimer from '@/app/timers/free/TimerComponent';
-import TabataTimer from '@/app/timers/tabata/TimerComponent';
 import PortraitReady from '@/components/timers/screens/PortraitReady';
 import LandscapeReady from '@/components/timers/screens/LandscapeReady';
+import BlockTransitionScreen from '@/components/workout/execution/BlockTransitionScreen';
+import TimerRenderer from '@/components/workout/execution/TimerRenderer';
 
 export default function WorkoutExecutionScreen() {
   const { workoutId } = useLocalSearchParams<{ workoutId: string }>();
-  const { isLandscape, dimensions } = useOrientation();
-  
-  useEffect(() => {
-    ScreenOrientation.unlockAsync();
-    
-    return () => {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-    };
-  }, []);
+  const { isLandscape } = useOrientation();
   
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const [isBlockActive, setIsBlockActive] = useState(false);
   const [isBlockCompleted, setIsBlockCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [isCountdown, setIsCountdown] = useState(false);
-  const [countdownValue, setCountdownValue] = useState(10);
-  const [isCountdownPaused, setIsCountdownPaused] = useState(false);
-  const countdownIntervalRef = useRef<any>(null);
+  const [isCountdownActive, setIsCountdownActive] = useState(false);
+
+  // Countdown hook
+  const countdown = useCountdown({
+    initialValue: 10,
+    onComplete: () => {
+      setIsCountdownActive(false);
+      setIsBlockActive(true);
+    },
+  });
+
+  useEffect(() => {
+    ScreenOrientation.unlockAsync();
+    return () => {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    };
+  }, []);
 
   useEffect(() => {
     loadWorkout();
@@ -54,300 +57,65 @@ export default function WorkoutExecutionScreen() {
   };
 
   const currentBlock = workout?.blocks[currentBlockIndex];
+  const nextBlock = workout?.blocks[currentBlockIndex + 1] || null;
   const isLastBlock = currentBlockIndex === (workout?.blocks.length || 0) - 1;
 
-  const startCountdown = useCallback(() => {
-    setIsCountdown(true);
-    setCountdownValue(10);
-    setIsCountdownPaused(false);
-    
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-    }
-    
-    countdownIntervalRef.current = setInterval(() => {
-      setCountdownValue(prev => {
-        if (prev <= 1) {
-          setIsCountdown(false);
-          setIsBlockActive(true);
-          if (countdownIntervalRef.current) {
-            clearInterval(countdownIntervalRef.current);
-          }
-          return 10;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
-
   const handleStartBlock = () => {
-    startCountdown();
+    // Si on vient de terminer un bloc, passer au suivant d'abord
+    if (showCelebration && !isLastBlock) {
+      handleNextBlock();
+    } else {
+      setIsCountdownActive(true);
+      countdown.start();
+    }
   };
 
-  const handleSkipCountdown = useCallback(() => {
-    setIsCountdown(false);
-    setIsBlockActive(true);
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-    }
-  }, []);
+  const handleSkipCountdown = () => {
+    setIsCountdownActive(false);
+    countdown.skip();
+  };
 
-  const handleToggleCountdownPause = useCallback(() => {
-    if (isCountdownPaused) {
-      // Reprendre le countdown
-      setIsCountdownPaused(false);
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-      }
-      countdownIntervalRef.current = setInterval(() => {
-        setCountdownValue(prev => {
-          if (prev <= 1) {
-            setIsCountdown(false);
-            setIsBlockActive(true);
-            if (countdownIntervalRef.current) {
-              clearInterval(countdownIntervalRef.current);
-            }
-            return 10;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+  const handleToggleCountdownPause = () => {
+    if (countdown.isPaused) {
+      countdown.resume();
     } else {
-      // Mettre en pause le countdown
-      setIsCountdownPaused(true);
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-      }
+      countdown.pause();
     }
-  }, [isCountdownPaused]);
+  };
 
-  const handleReadyToStart = useCallback(() => {
-    startCountdown();
-  }, [startCountdown]);
+  const handleReadyToStart = () => {
+    setIsCountdownActive(true);
+    countdown.start();
+  };
 
-  // Cleanup du countdown au démontage
-  useEffect(() => {
-    return () => {
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-      }
-    };
-  }, []);
-
-  const handleBlockComplete = () => {
+  // Fonction unifiée pour gérer la fin de bloc (fin naturelle ou swipe to stop)
+  const handleBlockEnd = useCallback(() => {
     setIsBlockActive(false);
     setIsBlockCompleted(true);
     setShowCelebration(true);
-  };
+  }, []);
 
   const handleNextBlock = () => {
     if (isLastBlock) {
-      // Workout completed
       router.back();
     } else {
       setCurrentBlockIndex(prev => prev + 1);
       setIsBlockCompleted(false);
       setShowCelebration(false);
-      setIsCountdown(false);
-      setCountdownValue(10);
-      setIsCountdownPaused(false);
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-      }
+      // Launch next block countdown immediately
+      setIsCountdownActive(true);
+      countdown.reset();
+      countdown.start();
     }
   };
 
-  // Fonction pour obtenir la config du timer pour le countdown screen
-  const getTimerConfig = (block: WorkoutBlock): { minutes: number; seconds: number } | undefined => {
-    switch (block.timerType) {
-      case 'AMRAP':
-        const duration = block.timerConfig.duration!;
-        return {
-          minutes: Math.floor(duration / 60),
-          seconds: duration % 60,
-        };
-      case 'EMOM':
-        const intervalDuration = block.timerConfig.intervalDuration!;
-        return {
-          minutes: Math.floor(intervalDuration / 60),
-          seconds: intervalDuration % 60,
-        };
-      case 'ForTime':
-        if (block.timerConfig.targetTime) {
-          const targetTime = block.timerConfig.targetTime;
-          return {
-            minutes: Math.floor(targetTime / 60),
-            seconds: targetTime % 60,
-          };
-        }
-        return undefined; // Free timer, pas de config
-      case 'Tabata':
-        const workTime = block.timerConfig.workTime!;
-        return {
-          minutes: Math.floor(workTime / 60),
-          seconds: workTime % 60,
-        };
-      default:
-        return undefined;
-    }
+  const handleCountdownBack = () => {
+    setIsCountdownActive(false);
+    countdown.reset();
   };
 
-  const getBlockSummary = (block: WorkoutBlock) => {
-    let timerInfo = '';
-    switch (block.timerType) {
-      case 'AMRAP':
-        const amrapMinutes = Math.floor(block.timerConfig.duration! / 60);
-        timerInfo = `${amrapMinutes}min • As Many Rounds As Possible`;
-        break;
-      case 'EMOM':
-        timerInfo = `${block.timerConfig.rounds} rounds × ${block.timerConfig.intervalDuration}s • Every Minute On the Minute`;
-        break;
-      case 'ForTime':
-        const setsText = block.sets ? `${block.sets} sets` : 'Unlimited sets';
-        const restText = (block.sets && block.sets > 0 && block.timerConfig.restTime) ? ` • ${block.timerConfig.restTime}s rest` : '';
-        const targetText = block.timerConfig.targetTime ? ` • Target: ${block.timerConfig.targetTime}s` : '';
-        timerInfo = `${setsText}${restText}${targetText} • As fast as possible`;
-        break;
-      case 'Tabata':
-        timerInfo = `${block.timerConfig.rounds} rounds × ${block.timerConfig.workTime}s/${block.timerConfig.restTime}s • High Intensity Interval`;
-        break;
-    }
-
-    return { timerInfo };
-  };
-
-  const renderExerciseList = (exercises: any[]) => {
-    return (
-      <View style={{
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: isLandscape ? 6 : 8,
-      }}>
-        {exercises.map((exercise, index) => (
-          <View key={index} style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingVertical: isLandscape ? 4 : 6,
-            paddingHorizontal: isLandscape ? 8 : 10,
-            backgroundColor: 'rgba(135, 206, 235, 0.15)',
-            borderRadius: isLandscape ? 16 : 20,
-            borderWidth: 1,
-            borderColor: 'rgba(135, 206, 235, 0.3)',
-          }}>
-            <View style={{
-              width: isLandscape ? 16 : 18,
-              height: isLandscape ? 16 : 18,
-              borderRadius: isLandscape ? 8 : 9,
-              backgroundColor: '#87CEEB',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: isLandscape ? 6 : 8,
-            }}>
-              <Text style={{
-                color: '#0F0F10',
-                fontSize: isLandscape ? 9 : 10,
-                fontWeight: 'bold',
-              }}>
-                {index + 1}
-              </Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{
-                color: '#F5F5DC',
-                fontSize: isLandscape ? 12 : 14,
-                fontWeight: '600',
-                marginRight: exercise.volume ? 6 : 0,
-              }}>
-                {exercise.name}
-              </Text>
-              {exercise.volume && (
-                <Text style={{
-                  color: 'rgba(135, 206, 235, 0.8)',
-                  fontSize: isLandscape ? 10 : 12,
-                }}>
-                  {exercise.volume} {exercise.unit}
-                </Text>
-              )}
-            </View>
-          </View>
-        ))}
-      </View>
-    );
-  };
-
-  const renderTimerComponent = () => {
-    if (!currentBlock || !isBlockActive) return null;
-
-    const commonProps = {
-      onResetTimer: () => {
-        handleBlockComplete();
-      },
-    };
-
-    switch (currentBlock.timerType) {
-      case 'AMRAP':
-        // Convert duration (seconds) to minutes and seconds
-        const duration = currentBlock.timerConfig.duration!;
-        const amrapConfig = {
-          minutes: Math.floor(duration / 60),
-          seconds: duration % 60,
-        };
-        return (
-          <AMRAPTimer
-            config={amrapConfig}
-            {...commonProps}
-          />
-        );
-      case 'EMOM':
-        const intervalDuration = currentBlock.timerConfig.intervalDuration!;
-        const emomConfig = {
-          rounds: currentBlock.timerConfig.rounds!,
-          duration: intervalDuration,
-        };
-        return (
-          <EMOMTimer
-            config={emomConfig}
-            {...commonProps}
-          />
-        );
-      case 'ForTime':
-        // Si pas de targetTime, utiliser le Free timer (mode infini)
-        if (!currentBlock.timerConfig.targetTime) {
-          return (
-            <FreeTimer
-              {...commonProps}
-            />
-          );
-        }
-        
-        // Sinon, utiliser le ForTime timer avec targetTime
-        const targetTime = currentBlock.timerConfig.targetTime;
-        const forTimeConfig = {
-          minutes: Math.floor(targetTime / 60),
-          seconds: targetTime % 60,
-        };
-        return (
-          <ForTimeTimer
-            config={forTimeConfig}
-            {...commonProps}
-          />
-        );
-      case 'Tabata':
-        const tabataConfig = {
-          rounds: currentBlock.timerConfig.rounds!,
-          workTime: currentBlock.timerConfig.workTime!,
-          restTime: currentBlock.timerConfig.restTime!,
-        };
-        return (
-          <TabataTimer
-            config={tabataConfig}
-            isLandscape={isLandscape}
-            {...commonProps}
-          />
-        );
-      default:
-        return null;
-    }
+  const handleBack = () => {
+    router.back();
   };
 
   if (!workout || !currentBlock) {
@@ -360,7 +128,8 @@ export default function WorkoutExecutionScreen() {
     );
   }
 
-  const { timerInfo } = getBlockSummary(currentBlock);
+  const ReadyComponent = isLandscape ? LandscapeReady : PortraitReady;
+  const timerConfig = getTimerConfig(currentBlock);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
@@ -382,49 +151,19 @@ export default function WorkoutExecutionScreen() {
         }} />
       </View>
 
-      {isCountdown ? (
-        // Countdown Screen
-        isLandscape ? (
-          <LandscapeReady
-            title={currentBlock.timerType}
-            config={currentBlock ? getTimerConfig(currentBlock) : undefined}
-            onStartCountdown={handleReadyToStart}
-            onBack={() => {
-              setIsCountdown(false);
-              setCountdownValue(10);
-              setIsCountdownPaused(false);
-              if (countdownIntervalRef.current) {
-                clearInterval(countdownIntervalRef.current);
-              }
-            }}
-            onSkipCountdown={handleSkipCountdown}
-            countdownValue={countdownValue}
-            isCountdown={isCountdown}
-            isPaused={isCountdownPaused}
-            onTogglePause={handleToggleCountdownPause}
-          />
-        ) : (
-          <PortraitReady
-            title={currentBlock.timerType}
-            config={currentBlock ? getTimerConfig(currentBlock) : undefined}
-            onStartCountdown={handleReadyToStart}
-            onBack={() => {
-              setIsCountdown(false);
-              setCountdownValue(10);
-              setIsCountdownPaused(false);
-              if (countdownIntervalRef.current) {
-                clearInterval(countdownIntervalRef.current);
-              }
-            }}
-            onSkipCountdown={handleSkipCountdown}
-            countdownValue={countdownValue}
-            isCountdown={isCountdown}
-            isPaused={isCountdownPaused}
-            onTogglePause={handleToggleCountdownPause}
-          />
-        )
+      {isCountdownActive ? (
+        <ReadyComponent
+          title={currentBlock.timerType}
+          config={timerConfig}
+          onStartCountdown={handleReadyToStart}
+          onBack={handleCountdownBack}
+          onSkipCountdown={handleSkipCountdown}
+          countdownValue={countdown.countdownValue}
+          isCountdown={true}
+          isPaused={countdown.isPaused}
+          onTogglePause={handleToggleCountdownPause}
+        />
       ) : isBlockActive ? (
-        // Timer Component - Full screen access
         <View style={{ 
           position: 'absolute',
           top: 0,
@@ -433,246 +172,29 @@ export default function WorkoutExecutionScreen() {
           bottom: 0,
           zIndex: 5 
         }}>
-          {renderTimerComponent()}
-        </View>
-      ) : (
-        // Block Summary or Celebration
-        <View style={{ flex: 1, zIndex: 5 }}>
-          {showCelebration ? (
-            // Celebration Screen
-            <View style={{
-              flex: 1,
-              justifyContent: isLandscape ? 'flex-start' : 'center',
-              alignItems: 'center',
-              padding: isLandscape ? 16 : 24,
-              paddingTop: isLandscape ? 40 : 24,
-            }}>
-              <View style={{
-                backgroundColor: 'rgba(18, 18, 18, 0.9)',
-                borderRadius: 24,
-                padding: isLandscape ? 24 : 40,
-                alignItems: 'center',
-                borderWidth: 2,
-                borderColor: '#4CAF50',
-                shadowColor: '#4CAF50',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.4,
-                shadowRadius: 20,
-                elevation: 8,
-                width: '100%',
-                maxWidth: isLandscape ? 600 : 400,
-              }}>
-                <FontAwesome name="trophy" size={64} color="#4CAF50" />
-                <Text style={{
-                  color: '#4CAF50',
-                  fontSize: 24,
-                  fontWeight: 'bold',
-                  marginTop: 16,
-                  textAlign: 'center',
-                }}>
-                  Block Completed!
-                </Text>
-                <Text style={{
-                  color: 'rgba(135, 206, 235, 0.8)',
-                  fontSize: 16,
-                  textAlign: 'center',
-                  marginTop: 8,
-                }}>
-                  Great job! Ready for the next block?
-                </Text>
-                
-                {/* Continue Button */}
-                <TouchableOpacity
-                  onPress={handleNextBlock}
-                  style={{
-                    backgroundColor: '#4CAF50',
-                    borderRadius: 16,
-                    paddingVertical: 16,
-                    paddingHorizontal: 32,
-                    marginTop: 24,
-                    shadowColor: '#4CAF50',
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.4,
-                    shadowRadius: 15,
-                    elevation: 8,
-                  }}
-                >
-                  <Text style={{
-                    color: '#0F0F10',
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    letterSpacing: 1,
-                  }}>
-                    {isLastBlock ? 'FINISH WORKOUT' : 'NEXT BLOCK'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            // Block Summary Screen
-            <View style={{ flex: 1 }}>
-              <ScrollView style={{ flex: 1 }}>
-                <View style={{
-                  padding: isLandscape ? 12 : 16,
-                  paddingTop: isLandscape ? 20 : 24,
-                  paddingBottom: isLandscape ? 100 : 120, // Espace pour le bouton fixe
-                }}>
-                {/* Block Number */}
-                <View style={{
-                  backgroundColor: 'rgba(135, 206, 235, 0.05)',
-                  borderRadius: isLandscape ? 12 : 16,
-                  padding: isLandscape ? 12 : 16,
-                  marginBottom: isLandscape ? 16 : 24,
-                  alignItems: 'center',
-                  borderWidth: 1,
-                  borderColor: 'rgba(135, 206, 235, 0.2)',
-                }}>
-                  <Text style={{
-                    color: '#87CEEB',
-                    fontSize: isLandscape ? 12 : 14,
-                    fontWeight: '600',
-                    marginBottom: isLandscape ? 2 : 4,
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                  }}>
-                    Block {currentBlockIndex + 1} of {workout.blocks.length}
-                  </Text>
-                  <Text style={{
-                    color: '#F5F5DC',
-                    fontSize: isLandscape ? 18 : 20,
-                    fontWeight: 'bold',
-                  }}>
-                    {currentBlock.name}
-                  </Text>
-                </View>
-
-                {/* Timer Info */}
-                <View style={{
-                  backgroundColor: 'rgba(135, 206, 235, 0.05)',
-                  borderRadius: isLandscape ? 12 : 16,
-                  padding: isLandscape ? 12 : 20,
-                  marginBottom: isLandscape ? 16 : 24,
-                  borderWidth: 1,
-                  borderColor: 'rgba(135, 206, 235, 0.2)',
-                }}>
-                  <Text style={{
-                    color: 'rgba(135, 206, 235, 0.8)',
-                    fontSize: isLandscape ? 12 : 14,
-                    fontWeight: '600',
-                    marginBottom: isLandscape ? 4 : 8,
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                  }}>
-                    Timer Configuration
-                  </Text>
-                  <Text style={{
-                    color: '#F5F5DC',
-                    fontSize: isLandscape ? 14 : 16,
-                    lineHeight: isLandscape ? 18 : 24,
-                  }}>
-                    {timerInfo}
-                  </Text>
-                </View>
-
-                {/* Exercises */}
-                <View style={{
-                  backgroundColor: 'rgba(135, 206, 235, 0.05)',
-                  borderRadius: isLandscape ? 12 : 16,
-                  padding: isLandscape ? 12 : 20,
-                  marginBottom: isLandscape ? 16 : 24,
-                  borderWidth: 1,
-                  borderColor: 'rgba(135, 206, 235, 0.2)',
-                  flex: 1,
-                }}>
-                  <Text style={{
-                    color: 'rgba(135, 206, 235, 0.8)',
-                    fontSize: isLandscape ? 12 : 14,
-                    fontWeight: '600',
-                    marginBottom: isLandscape ? 8 : 12,
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                  }}>
-                    Exercises ({currentBlock.exercises.length})
-                  </Text>
-                  <ScrollView 
-                    style={{
-                      maxHeight: isLandscape ? 80 : 200,
-                    }}
-                    showsVerticalScrollIndicator={false}
-                  >
-                    {renderExerciseList(currentBlock.exercises)}
-                  </ScrollView>
-                </View>
-                </View>
-              </ScrollView>
-              
-              <View style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                padding: isLandscape ? 12 : 16,
-                backgroundColor: '#0F0F10',
-              }}>
-                <TouchableOpacity
-                  onPress={handleStartBlock}
-                  style={{
-                    backgroundColor: 'rgba(18, 18, 18, 0.9)',
-                    borderRadius: isLandscape ? 12 : 16,
-                    paddingVertical: isLandscape ? 14 : 20,
-                    paddingHorizontal: isLandscape ? 24 : 32,
-                    alignItems: 'center',
-                    borderWidth: 2,
-                    borderColor: '#87CEEB',
-                    shadowColor: '#87CEEB',
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 20,
-                    elevation: 8,
-                  }}
-                >
-                  <Text style={{
-                    color: '#F5F5DC',
-                    fontSize: isLandscape ? 16 : 18,
-                    fontWeight: 'bold',
-                    letterSpacing: 1,
-                  }}>
-                    START BLOCK
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+          {currentBlock && (
+            <TimerRenderer
+              block={currentBlock}
+              isLandscape={isLandscape}
+              onResetTimer={handleBlockEnd}
+              skipFinalScreen={true}
+            />
           )}
         </View>
-      )}
-
-      {/* Next Block Button (only if block completed) */}
-      {isBlockCompleted && !showCelebration && (
-        <View style={{ padding: 24 }}>
-          <TouchableOpacity
-            onPress={handleNextBlock}
-            style={{
-              backgroundColor: isLastBlock ? '#4CAF50' : '#87CEEB',
-              borderRadius: 16,
-              paddingVertical: 18,
-              paddingHorizontal: 32,
-              alignItems: 'center',
-              shadowColor: isLastBlock ? '#4CAF50' : '#87CEEB',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.4,
-              shadowRadius: 20,
-              elevation: 8,
-            }}
-          >
-            <Text style={{
-              color: '#0F0F10',
-              fontSize: 16,
-              fontWeight: 'bold',
-              letterSpacing: 1,
-            }}>
-              {isLastBlock ? 'FINISH WORKOUT' : 'NEXT BLOCK'}
-            </Text>
-          </TouchableOpacity>
+      ) : (
+        <View style={{ flex: 1, zIndex: 5 }}>
+          <BlockTransitionScreen
+            currentBlock={currentBlock}
+            nextBlock={nextBlock}
+            blockIndex={currentBlockIndex}
+            totalBlocks={workout.blocks.length}
+            isLastBlock={isLastBlock}
+            showCelebration={showCelebration}
+            isLandscape={isLandscape}
+            onStartBlock={handleStartBlock}
+            onNextBlock={handleNextBlock}
+            onBack={handleBack}
+          />
         </View>
       )}
     </SafeAreaView>

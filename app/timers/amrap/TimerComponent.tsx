@@ -12,11 +12,29 @@ interface AMRAPConfig {
 interface TimerComponentProps {
   config: AMRAPConfig;
   onResetTimer: () => void;
+  skipFinalScreen?: boolean;
 }
 
-export default function TimerComponent({ config, onResetTimer }: TimerComponentProps) {
+export default function TimerComponent({ config, onResetTimer, skipFinalScreen = false }: TimerComponentProps) {
   const { isLandscape } = useOrientation();
   const { state, actions, formatTime } = useAMRAPTimer(config);
+  
+  // Dans le contexte workout, si finalTime est défini, appeler directement onResetTimer
+  React.useEffect(() => {
+    if (skipFinalScreen && state.finalTime && onResetTimer) {
+      // Petit délai pour s'assurer que le timer a bien fini
+      const timer = setTimeout(() => {
+        onResetTimer();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [skipFinalScreen, state.finalTime, onResetTimer]);
+
+  // Dans le contexte workout, ne pas afficher l'écran final, retourner null
+  // Le useEffect ci-dessus appellera onResetTimer
+  if (skipFinalScreen && state.finalTime) {
+    return null;
+  }
   
   const commonProps = {
     config,

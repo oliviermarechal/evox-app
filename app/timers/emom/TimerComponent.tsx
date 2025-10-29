@@ -13,15 +13,31 @@ interface EMOMConfig {
 interface TimerComponentProps {
   config: EMOMConfig;
   onResetTimer: () => void;
+  skipFinalScreen?: boolean;
 }
 
-export default function TimerComponent({ config, onResetTimer }: TimerComponentProps) {
+export default function TimerComponent({ config, onResetTimer, skipFinalScreen = false }: TimerComponentProps) {
   const { isLandscape } = useOrientation();
 
   const state = useEMOMTimer(config);
 
-  // If timer is finished, show final screen
-  if (state.finalTime) {
+  // Dans le contexte workout, si finalTime est défini, appeler directement onResetTimer
+  React.useEffect(() => {
+    if (skipFinalScreen && state.finalTime && onResetTimer) {
+      const timer = setTimeout(() => {
+        onResetTimer();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [skipFinalScreen, state.finalTime, onResetTimer]);
+
+  // Dans le contexte workout, ne pas afficher l'écran final
+  if (skipFinalScreen && state.finalTime) {
+    return null;
+  }
+
+  // If timer is finished, show final screen (sauf si skipFinalScreen)
+  if (state.finalTime && !skipFinalScreen) {
     return (
       <EMOMFinalScreen
         finalTime={state.finalTime}

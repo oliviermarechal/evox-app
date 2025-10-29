@@ -14,12 +14,28 @@ interface TimerComponentProps {
   config: TabataConfig;
   isLandscape: boolean;
   onResetTimer: () => void;
+  skipFinalScreen?: boolean;
 }
 
-export default function TimerComponent({ config, isLandscape, onResetTimer }: TimerComponentProps) {
+export default function TimerComponent({ config, isLandscape, onResetTimer, skipFinalScreen = false }: TimerComponentProps) {
   const state = useTabataTimer(config);
 
-  if (state.finalTime) {
+  // Dans le contexte workout, si finalTime est défini, appeler directement onResetTimer
+  React.useEffect(() => {
+    if (skipFinalScreen && state.finalTime && onResetTimer) {
+      const timer = setTimeout(() => {
+        onResetTimer();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [skipFinalScreen, state.finalTime, onResetTimer]);
+
+  // Dans le contexte workout, ne pas afficher l'écran final
+  if (skipFinalScreen && state.finalTime) {
+    return null;
+  }
+
+  if (state.finalTime && !skipFinalScreen) {
     return (
       <TabataFinalScreen
         finalTime={state.finalTime}

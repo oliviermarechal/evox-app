@@ -10,7 +10,7 @@ import WorkoutNameModal from '@/components/workout/WorkoutNameModal';
 import WorkoutDetailScreen from '@/components/workout/WorkoutDetailScreen';
 
 export default function WorkoutsScreen() {
-  useScreenOrientation(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+  useScreenOrientation(ScreenOrientation.OrientationLock.ALL);
 
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [showNameModal, setShowNameModal] = useState(false);

@@ -13,14 +13,30 @@ export interface ForTimeConfig {
 interface TimerComponentProps {
   config: ForTimeConfig;
   onResetTimer: () => void;
+  skipFinalScreen?: boolean;
 }
 
-export default function TimerComponent({ config, onResetTimer }: TimerComponentProps) {
+export default function TimerComponent({ config, onResetTimer, skipFinalScreen = false }: TimerComponentProps) {
   const { isLandscape } = useOrientation();
   const { state, actions, formatTime } = useForTimeTimer(config);
 
-  // Afficher l'écran final si le timer est terminé
-  if (state.finalTime) {
+  // Dans le contexte workout, si finalTime est défini, appeler directement onResetTimer
+  React.useEffect(() => {
+    if (skipFinalScreen && state.finalTime && onResetTimer) {
+      const timer = setTimeout(() => {
+        onResetTimer();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [skipFinalScreen, state.finalTime, onResetTimer]);
+
+  // Dans le contexte workout, ne pas afficher l'écran final
+  if (skipFinalScreen && state.finalTime) {
+    return null;
+  }
+
+  // Afficher l'écran final si le timer est terminé (sauf si skipFinalScreen)
+  if (state.finalTime && !skipFinalScreen) {
     return (
       <ForTimeFinalScreen
         finalTime={state.finalTime}
