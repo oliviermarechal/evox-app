@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ScrollView, TextInput, Modal, KeyboardAvoidingView, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity, TextInput, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import * as Haptics from 'expo-haptics';
+import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
+import Animated from 'react-native-reanimated';
 import { Workout, WorkoutBlock } from '@/lib/types';
 import { WorkoutStorage } from '@/lib/storage';
 import BlockBuilderModal from './BlockBuilderModal';
@@ -23,6 +25,7 @@ export default function WorkoutDetailScreen({
   const [editingBlock, setEditingBlock] = useState<WorkoutBlock | null>(null);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [newWorkoutName, setNewWorkoutName] = useState(workout.name);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     setCurrentWorkout(workout);
@@ -106,6 +109,27 @@ export default function WorkoutDetailScreen({
     setEditingBlock(null);
   };
 
+  const handleReorderBlocks = async (data: WorkoutBlock[]) => {
+    try {
+      await WorkoutStorage.reorderBlocksInWorkout(currentWorkout.id, data);
+      const updatedWorkout = await WorkoutStorage.getWorkoutById(currentWorkout.id);
+      if (updatedWorkout) {
+        setCurrentWorkout(updatedWorkout);
+        onWorkoutUpdated(updatedWorkout);
+        // Haptic feedback pour confirmer le réordonnancement
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Error reordering blocks:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  };
+
+  const handleToggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   const getBlockSubtitle = (block: WorkoutBlock) => {
     if (block.exercises.length === 0) return 'No exercises';
     
@@ -131,88 +155,170 @@ export default function WorkoutDetailScreen({
     }
   };
 
-  const renderBlock = ({ item, index }: { item: WorkoutBlock; index: number }) => (
-    <View style={{
-      backgroundColor: 'rgba(18, 18, 18, 0.8)',
-      borderRadius: 16,
-      padding: 18,
-      marginBottom: 8,
-      borderWidth: 1,
-      borderColor: 'rgba(135, 206, 235, 0.2)',
-      shadowColor: '#87CEEB',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.15,
-      shadowRadius: 8,
-      elevation: 4,
-    }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <View style={{ flex: 1 }}>
-          <Text style={{
-            color: '#F5F5DC',
-            fontSize: 17,
-            fontWeight: 'bold',
-            marginBottom: 4,
-          }}>
-            {item.name}
-          </Text>
-          <Text style={{
-            color: 'rgba(135, 206, 235, 0.7)',
-            fontSize: 13,
-            marginBottom: 6,
-            lineHeight: 18,
-          }}>
-            {getBlockSubtitle(item)}
-          </Text>
-          <Text style={{
-            color: 'rgba(135, 206, 235, 0.5)',
-            fontSize: 11,
-            textTransform: 'uppercase',
-            letterSpacing: 0.8,
-          }}>
-            {item.exercises.length} exercise{item.exercises.length !== 1 ? 's' : ''}
-          </Text>
-        </View>
-        
-        <View style={{ flexDirection: 'row', gap: 8 }}>
+  const renderBlock = ({ item, index, drag, isActive }: RenderItemParams<WorkoutBlock> & { index: number }) => {
+    return (
+      <ScaleDecorator>
+        <Animated.View
+          style={{
+            backgroundColor: isActive ? 'rgba(135, 206, 235, 0.15)' : 'rgba(18, 18, 18, 0.8)',
+            borderRadius: 16,
+            padding: 18,
+            marginBottom: 8,
+            borderWidth: isActive ? 2 : 1,
+            borderColor: isActive ? '#87CEEB' : 'rgba(135, 206, 235, 0.2)',
+            shadowColor: '#87CEEB',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: isActive ? 0.3 : 0.15,
+            shadowRadius: isActive ? 12 : 8,
+            elevation: isActive ? 8 : 4,
+          }}
+        >
           <TouchableOpacity
-            onPress={() => handleEditBlock(item)}
-            style={{
-              backgroundColor: '#121212',
-              borderRadius: 12,
-              padding: 10,
-              borderWidth: 1.5,
-              borderColor: 'rgba(135, 206, 235, 0.3)',
-              shadowColor: '#87CEEB',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 2,
+            onLongPress={() => {
+              if (isEditMode) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                drag();
+              }
             }}
+            disabled={!isEditMode || isActive}
+            activeOpacity={isEditMode ? 0.8 : 1}
+            delayLongPress={150}
           >
-            <FontAwesome name="edit" size={16} color="#87CEEB" />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{
+                  color: '#F5F5DC',
+                  fontSize: 17,
+                  fontWeight: 'bold',
+                  marginBottom: 4,
+                }}>
+                  Block {index + 1} - {item.name}
+                </Text>
+                <Text style={{
+                  color: 'rgba(135, 206, 235, 0.7)',
+                  fontSize: 13,
+                  marginBottom: 6,
+                  lineHeight: 18,
+                }}>
+                  {getBlockSubtitle(item)}
+                </Text>
+                <Text style={{
+                  color: 'rgba(135, 206, 235, 0.5)',
+                  fontSize: 11,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.8,
+                }}>
+                  {item.exercises.length} exercise{item.exercises.length !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                {/* Boutons Edit/Delete - masqués en mode reordering */}
+                {!isActive && !isEditMode && (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => handleEditBlock(item)}
+                      style={{
+                        backgroundColor: '#121212',
+                        borderRadius: 12,
+                        padding: 10,
+                        borderWidth: 1.5,
+                        borderColor: 'rgba(135, 206, 235, 0.3)',
+                        shadowColor: '#87CEEB',
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 2,
+                      }}
+                    >
+                      <FontAwesome name="edit" size={16} color="#87CEEB" />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      onPress={() => handleDeleteBlock(item.id)}
+                      style={{
+                        backgroundColor: '#121212',
+                        borderRadius: 12,
+                        padding: 10,
+                        borderWidth: 1.5,
+                        borderColor: 'rgba(255, 107, 107, 0.3)',
+                        shadowColor: '#FF6B6B',
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 4,
+                        elevation: 2,
+                      }}
+                    >
+                      <FontAwesome name="trash" size={16} color="#FF6B6B" />
+                    </TouchableOpacity>
+                  </>
+                )}
+                
+                {/* Drag Handle - visible seulement en mode édition, à droite */}
+                {isEditMode && (
+                  <View
+                    style={{
+                      paddingVertical: 8,
+                      paddingLeft: 12,
+                      opacity: isActive ? 0.6 : 1,
+                      justifyContent: 'center',
+                      alignItems: 'flex-end',
+                      minWidth: 20,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', gap: 4 }}>
+                      {/* Colonne gauche */}
+                      <View style={{ flexDirection: 'column', gap: 3.5, justifyContent: 'center' }}>
+                        <View style={{ 
+                          width: 3.5, 
+                          height: 3.5, 
+                          borderRadius: 1.75, 
+                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                        }} />
+                        <View style={{ 
+                          width: 3.5, 
+                          height: 3.5, 
+                          borderRadius: 1.75, 
+                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                        }} />
+                        <View style={{ 
+                          width: 3.5, 
+                          height: 3.5, 
+                          borderRadius: 1.75, 
+                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                        }} />
+                      </View>
+                      {/* Colonne droite */}
+                      <View style={{ flexDirection: 'column', gap: 3.5, justifyContent: 'center' }}>
+                        <View style={{ 
+                          width: 3.5, 
+                          height: 3.5, 
+                          borderRadius: 1.75, 
+                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                        }} />
+                        <View style={{ 
+                          width: 3.5, 
+                          height: 3.5, 
+                          borderRadius: 1.75, 
+                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                        }} />
+                        <View style={{ 
+                          width: 3.5, 
+                          height: 3.5, 
+                          borderRadius: 1.75, 
+                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                        }} />
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </View>
+            </View>
           </TouchableOpacity>
-          
-          <TouchableOpacity
-            onPress={() => handleDeleteBlock(item.id)}
-            style={{
-              backgroundColor: '#121212',
-              borderRadius: 12,
-              padding: 10,
-              borderWidth: 1.5,
-              borderColor: 'rgba(255, 107, 107, 0.3)',
-              shadowColor: '#FF6B6B',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
-          >
-            <FontAwesome name="trash" size={16} color="#FF6B6B" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
+        </Animated.View>
+      </ScaleDecorator>
+    );
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#0F0F10' }}>
@@ -265,13 +371,45 @@ export default function WorkoutDetailScreen({
               }}>
                 {currentWorkout.name}
               </Text>
+              {currentWorkout.blocks.length > 0 && (
+                <TouchableOpacity
+                  onPress={handleToggleEditMode}
+                  style={{
+                    backgroundColor: isEditMode ? '#87CEEB' : '#121212',
+                    borderRadius: 12,
+                    padding: 8,
+                    marginLeft: 8,
+                    borderWidth: 1.5,
+                    borderColor: isEditMode ? '#87CEEB' : 'rgba(135, 206, 235, 0.3)',
+                    shadowColor: '#87CEEB',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: isEditMode ? 0.4 : 0.2,
+                    shadowRadius: isEditMode ? 8 : 4,
+                    elevation: isEditMode ? 4 : 2,
+                  }}
+                >
+                  {isEditMode ? 
+                  <FontAwesome 
+                    name='check'
+                    size={14} 
+                    color={isEditMode ? '#0F0F10' : '#87CEEB'} 
+                  /> 
+                  :
+                  <FontAwesome5 
+                    name='grip-vertical'
+                    size={14} 
+                    color={isEditMode ? '#0F0F10' : '#87CEEB'} 
+                  />
+                  }
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 onPress={handleRenameWorkout}
                 style={{
                   backgroundColor: '#121212',
                   borderRadius: 12,
                   padding: 8,
-                  marginLeft: 12,
+                  marginLeft: 8,
                   borderWidth: 1.5,
                   borderColor: 'rgba(135, 206, 235, 0.3)',
                   shadowColor: '#87CEEB',
@@ -284,12 +422,32 @@ export default function WorkoutDetailScreen({
                 <FontAwesome name="edit" size={14} color="#87CEEB" />
               </TouchableOpacity>
             </View>
-            <Text style={{
-              color: 'rgba(135, 206, 235, 0.7)',
-              fontSize: 14,
-            }}>
-              {currentWorkout.blocks.length} block{currentWorkout.blocks.length !== 1 ? 's' : ''}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={{
+                color: 'rgba(135, 206, 235, 0.7)',
+                fontSize: 14,
+              }}>
+                {currentWorkout.blocks.length} block{currentWorkout.blocks.length !== 1 ? 's' : ''}
+              </Text>
+              {isEditMode && (
+                <View style={{
+                  backgroundColor: 'rgba(135, 206, 235, 0.2)',
+                  borderRadius: 8,
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                }}>
+                  <Text style={{
+                    color: '#87CEEB',
+                    fontSize: 10,
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                  }}>
+                    Reorder Mode
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         </View>
       </View>
@@ -324,19 +482,17 @@ export default function WorkoutDetailScreen({
             </Text>
           </View>
         ) : (
-          <ScrollView 
-            style={{ flex: 1 }} 
-            contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 100 }}
-            showsVerticalScrollIndicator={false}
-          >
-            <FlatList
+          <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 100 }}>
+            <DraggableFlatList
               data={currentWorkout.blocks}
-              renderItem={renderBlock}
+              onDragEnd={({ data }) => handleReorderBlocks(data)}
               keyExtractor={(item) => item.id}
-              scrollEnabled={false}
+              renderItem={(params) => renderBlock({ ...params, index: currentWorkout.blocks.findIndex(b => b.id === params.item.id) })}
+              scrollEnabled={true}
               showsVerticalScrollIndicator={false}
+              activationDistance={5}
             />
-          </ScrollView>
+          </View>
         )}
 
         {/* Fixed Add Block Button */}
@@ -388,7 +544,7 @@ export default function WorkoutDetailScreen({
         visible={showBlockModal}
         onClose={handleBlockModalClose}
         onSave={handleBlockSave}
-        blockNumber={currentWorkout.blocks.length + 1}
+        blockNumber={editingBlock ? currentWorkout.blocks.findIndex(b => b.id === editingBlock.id) + 1 : currentWorkout.blocks.length + 1}
         editingBlock={editingBlock}
       />
 

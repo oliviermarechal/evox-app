@@ -198,6 +198,37 @@ export class WorkoutStorage {
   }
 
   /**
+   * Réordonner les blocs d'un workout
+   */
+  static async reorderBlocksInWorkout(workoutId: string, newOrder: WorkoutBlock[]): Promise<boolean> {
+    try {
+      const workouts = await this.loadWorkouts();
+      const workoutIndex = workouts.findIndex(w => w.id === workoutId);
+      
+      if (workoutIndex === -1) {
+        throw new Error('Workout not found');
+      }
+
+      // Vérifier que tous les IDs correspondent
+      const currentBlockIds = new Set(workouts[workoutIndex].blocks.map(b => b.id));
+      const newBlockIds = new Set(newOrder.map(b => b.id));
+      
+      if (currentBlockIds.size !== newBlockIds.size || 
+          [...currentBlockIds].some(id => !newBlockIds.has(id))) {
+        throw new Error('Block IDs mismatch');
+      }
+
+      workouts[workoutIndex].blocks = newOrder;
+      await this.saveWorkouts(workouts);
+      
+      return true;
+    } catch (error) {
+      console.error('Error reordering blocks:', error);
+      throw new Error('Failed to reorder blocks');
+    }
+  }
+
+  /**
    * Supprimer un bloc d'un workout
    */
   static async deleteBlockFromWorkout(workoutId: string, blockId: string): Promise<boolean> {

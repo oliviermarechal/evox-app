@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import * as Haptics from 'expo-haptics';
+import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
+import Animated from 'react-native-reanimated';
 import { WorkoutBlock, Exercise, ExerciseTemplate } from '@/lib/types';
 import ExerciseSelector from './ExerciseSelector';
 import ExerciseCard from './ExerciseCard';
@@ -28,6 +32,7 @@ export default function BlockBuilderModal({
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   const [sets, setSets] = useState<number | undefined>(undefined);
   const [showRestTime, setShowRestTime] = useState(false);
+  const [isExerciseReorderMode, setIsExerciseReorderMode] = useState(false);
   
   // WheelPicker states
   const [selectedDurationIndex, setSelectedDurationIndex] = useState(0);
@@ -231,12 +236,23 @@ export default function BlockBuilderModal({
     setSelectedExercises(prev => prev.filter(ex => ex.id !== exerciseId));
   };
 
+  const handleReorderExercises = ({ data }: { data: Exercise[] }) => {
+    setSelectedExercises(data);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const handleToggleExerciseReorderMode = () => {
+    setIsExerciseReorderMode(!isExerciseReorderMode);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   const resetState = () => {
     setCurrentStep('timer');
     setSelectedTimer('AMRAP');
     setSelectedExercises([]);
     setSets(undefined);
     setShowExerciseSelector(false);
+    setIsExerciseReorderMode(false);
     setTimerConfig({
       duration: 10,
       rounds: 10,
@@ -255,7 +271,7 @@ export default function BlockBuilderModal({
     }
     
     const block: Omit<WorkoutBlock, 'id'> = {
-      name: `Block ${blockNumber} - ${selectedTimer}`,
+      name: selectedTimer, // Ne plus inclure le numéro dans le nom
       timerType: selectedTimer,
       exercises: selectedExercises,
       sets: sets,
@@ -1012,14 +1028,48 @@ export default function BlockBuilderModal({
                 Select exercises
               </Text>
               
-              <Text style={{
-                color: 'rgba(135, 206, 235, 0.7)',
-                fontSize: 16,
-                textAlign: 'center',
-                marginBottom: 32,
-              }}>
-                Add exercises to this block
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+                <Text style={{
+                  color: 'rgba(135, 206, 235, 0.7)',
+                  fontSize: 16,
+                  textAlign: 'center',
+                  flex: 1,
+                }}>
+                  Add exercises to this block
+                </Text>
+                {selectedExercises.length > 1 && (
+                  <TouchableOpacity
+                    onPress={handleToggleExerciseReorderMode}
+                    style={{
+                      backgroundColor: isExerciseReorderMode ? '#87CEEB' : '#121212',
+                      borderRadius: 12,
+                      padding: 8,
+                      marginLeft: 16,
+                      borderWidth: 1.5,
+                      borderColor: isExerciseReorderMode ? '#87CEEB' : 'rgba(135, 206, 235, 0.3)',
+                      shadowColor: '#87CEEB',
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: isExerciseReorderMode ? 0.4 : 0.2,
+                      shadowRadius: isExerciseReorderMode ? 8 : 4,
+                      elevation: isExerciseReorderMode ? 4 : 2,
+                    }}
+                  >
+                  {isExerciseReorderMode ? (
+                    <FontAwesome 
+                      name="check" 
+                      size={14} 
+                      color="#0F0F10" 
+                    />
+                  ) : (
+                    <FontAwesome5 
+                      name="grip-vertical" 
+                      size={14} 
+                      color="#87CEEB" 
+                    />
+                  )}
+                  </TouchableOpacity>
+                )}
+              </View>
 
               {/* Timer Settings Link for Editing Mode */}
               {editingBlock && (
@@ -1050,45 +1100,165 @@ export default function BlockBuilderModal({
                 </TouchableOpacity>
               )}
 
-              {/* Add Exercise Button */}
-              <TouchableOpacity
-                onPress={() => setShowExerciseSelector(true)}
-                style={{
-                  backgroundColor: 'rgba(18, 18, 18, 0.8)',
-                  borderRadius: 16,
-                  padding: 20,
-                  borderWidth: 1,
-                  borderColor: 'rgba(135, 206, 235, 0.2)',
-                  alignItems: 'center',
-                  marginBottom: 20,
-                  shadowColor: '#87CEEB',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 8,
-                  elevation: 4,
-                }}
-              >
-                <FontAwesome name="plus" size={24} color="rgba(135, 206, 235, 0.8)" />
-                <Text style={{
-                  color: '#F5F5DC',
-                  fontSize: 16,
-                  fontWeight: '600',
-                  marginTop: 8,
-                  letterSpacing: 1,
-                }}>
-                  ADD EXERCISE
-                </Text>
-              </TouchableOpacity>
+              {/* Add Exercise Button - masqué en mode reordering */}
+              {!isExerciseReorderMode && (
+                <TouchableOpacity
+                  onPress={() => setShowExerciseSelector(true)}
+                  style={{
+                    backgroundColor: 'rgba(18, 18, 18, 0.8)',
+                    borderRadius: 16,
+                    padding: 20,
+                    borderWidth: 1,
+                    borderColor: 'rgba(135, 206, 235, 0.2)',
+                    alignItems: 'center',
+                    marginBottom: 20,
+                    shadowColor: '#87CEEB',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  }}
+                >
+                  <FontAwesome name="plus" size={24} color="rgba(135, 206, 235, 0.8)" />
+                  <Text style={{
+                    color: '#F5F5DC',
+                    fontSize: 16,
+                    fontWeight: '600',
+                    marginTop: 8,
+                    letterSpacing: 1,
+                  }}>
+                    ADD EXERCISE
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {/* Selected Exercises */}
-              {selectedExercises.map((exercise) => (
-                <ExerciseCard
-                  key={exercise.id}
-                  exercise={exercise}
-                  onUpdate={handleExerciseUpdate}
-                  onRemove={() => handleExerciseRemove(exercise.id)}
-                />
-              ))}
+              {selectedExercises.length > 0 && (
+                <View style={{ marginBottom: 8 }}>
+                  {isExerciseReorderMode ? (
+                    <DraggableFlatList
+                      data={selectedExercises}
+                      onDragEnd={handleReorderExercises}
+                      keyExtractor={(item) => item.id}
+                      renderItem={(params) => {
+                        const { item, index, drag, isActive } = params;
+                        return (
+                          <ScaleDecorator>
+                            <Animated.View
+                              style={{
+                                backgroundColor: isActive ? 'rgba(135, 206, 235, 0.15)' : 'rgba(18, 18, 18, 0.8)',
+                                borderRadius: 16,
+                                padding: 16,
+                                marginBottom: 8,
+                                borderWidth: isActive ? 2 : 1,
+                                borderColor: isActive ? '#87CEEB' : 'rgba(135, 206, 235, 0.2)',
+                                shadowColor: '#87CEEB',
+                                shadowOffset: { width: 0, height: 0 },
+                                shadowOpacity: isActive ? 0.3 : 0.15,
+                                shadowRadius: isActive ? 12 : 8,
+                                elevation: isActive ? 8 : 4,
+                              }}
+                            >
+                              <TouchableOpacity
+                                onLongPress={() => {
+                                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                  drag();
+                                }}
+                                disabled={isActive}
+                                activeOpacity={0.8}
+                                delayLongPress={150}
+                              >
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                    <Text style={{
+                                      color: '#F5F5DC',
+                                      fontSize: 15,
+                                      fontWeight: 'bold',
+                                    }}>
+                                      {item.name}
+                                    </Text>
+                                    {item.volume !== undefined && (
+                                      <Text style={{
+                                        color: 'rgba(135, 206, 235, 0.8)',
+                                        fontSize: 14,
+                                        fontWeight: '600',
+                                      }}>
+                                        {item.volume} {item.unit}
+                                      </Text>
+                                    )}
+                                  </View>
+                                  <View style={{
+                                    paddingVertical: 8,
+                                    paddingLeft: 12,
+                                    opacity: isActive ? 0.6 : 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'flex-end',
+                                    minWidth: 20,
+                                  }}>
+                                    <View style={{ flexDirection: 'row', gap: 4 }}>
+                                      <View style={{ flexDirection: 'column', gap: 3.5, justifyContent: 'center' }}>
+                                        <View style={{ 
+                                          width: 3.5, 
+                                          height: 3.5, 
+                                          borderRadius: 1.75, 
+                                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                                        }} />
+                                        <View style={{ 
+                                          width: 3.5, 
+                                          height: 3.5, 
+                                          borderRadius: 1.75, 
+                                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                                        }} />
+                                        <View style={{ 
+                                          width: 3.5, 
+                                          height: 3.5, 
+                                          borderRadius: 1.75, 
+                                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                                        }} />
+                                      </View>
+                                      <View style={{ flexDirection: 'column', gap: 3.5, justifyContent: 'center' }}>
+                                        <View style={{ 
+                                          width: 3.5, 
+                                          height: 3.5, 
+                                          borderRadius: 1.75, 
+                                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                                        }} />
+                                        <View style={{ 
+                                          width: 3.5, 
+                                          height: 3.5, 
+                                          borderRadius: 1.75, 
+                                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                                        }} />
+                                        <View style={{ 
+                                          width: 3.5, 
+                                          height: 3.5, 
+                                          borderRadius: 1.75, 
+                                          backgroundColor: 'rgba(135, 206, 235, 0.7)' 
+                                        }} />
+                                      </View>
+                                    </View>
+                                  </View>
+                                </View>
+                              </TouchableOpacity>
+                            </Animated.View>
+                          </ScaleDecorator>
+                        );
+                      }}
+                      scrollEnabled={false}
+                      activationDistance={5}
+                    />
+                  ) : (
+                    selectedExercises.map((exercise) => (
+                      <ExerciseCard
+                        key={exercise.id}
+                        exercise={exercise}
+                        onUpdate={handleExerciseUpdate}
+                        onRemove={() => handleExerciseRemove(exercise.id)}
+                      />
+                    ))
+                  )}
+                </View>
+              )}
             </View>
           )}
         </ScrollView>
