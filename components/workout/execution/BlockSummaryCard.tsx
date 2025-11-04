@@ -14,6 +14,7 @@ interface BlockSummaryCardProps {
   showCompletedRecap: boolean;
   onStartBlock?: () => void;
   onBack?: () => void;
+  onSelectBlock?: () => void;
 }
 
 export default function BlockSummaryCard({ 
@@ -23,7 +24,8 @@ export default function BlockSummaryCard({
   isLandscape,
   showCompletedRecap,
   onStartBlock,
-  onBack
+  onBack,
+  onSelectBlock,
 }: BlockSummaryCardProps) {
   const { timerInfo } = getBlockSummary(block);
   const insets = useSafeAreaInsets();
@@ -143,8 +145,8 @@ export default function BlockSummaryCard({
             </View>
           </View>
 
-          {/* Bouton en bas pour landscape */}
-          {onStartBlock && (
+          {/* Boutons en bas pour landscape */}
+          {(onStartBlock || onSelectBlock) && (
             <View style={{
               backgroundColor: '#0F0F10',
               paddingTop: 16,
@@ -152,33 +154,63 @@ export default function BlockSummaryCard({
               paddingHorizontal: 20,
               borderTopWidth: 1,
               borderTopColor: 'rgba(135, 206, 235, 0.1)',
+              gap: 12,
             }}>
-              <TouchableOpacity
-                onPress={onStartBlock}
-                style={{
-                  backgroundColor: 'rgba(18, 18, 18, 0.95)',
-                  borderRadius: 14,
-                  paddingVertical: 14,
-                  paddingHorizontal: 28,
-                  alignItems: 'center',
-                  borderWidth: 2,
-                  borderColor: '#87CEEB',
-                  shadowColor: '#87CEEB',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 15,
-                  elevation: 8,
-                }}
-              >
-                <Text style={{
-                  color: '#F5F5DC',
-                  fontSize: 16,
-                  fontWeight: 'bold',
-                  letterSpacing: 1,
-                }}>
-                  START BLOCK
-                </Text>
-              </TouchableOpacity>
+              {onSelectBlock && (
+                <TouchableOpacity
+                  onPress={onSelectBlock}
+                  style={{
+                    backgroundColor: 'rgba(18, 18, 18, 0.95)',
+                    borderRadius: 14,
+                    paddingVertical: 12,
+                    paddingHorizontal: 24,
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 8,
+                    borderWidth: 1.5,
+                    borderColor: 'rgba(135, 206, 235, 0.4)',
+                  }}
+                >
+                  <FontAwesome name="list" size={14} color="#87CEEB" />
+                  <Text style={{
+                    color: '#87CEEB',
+                    fontSize: 14,
+                    fontWeight: '600',
+                    letterSpacing: 0.5,
+                  }}>
+                    CHOOSE BLOCK
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {onStartBlock && (
+                <TouchableOpacity
+                  onPress={onStartBlock}
+                  style={{
+                    backgroundColor: 'rgba(18, 18, 18, 0.95)',
+                    borderRadius: 14,
+                    paddingVertical: 14,
+                    paddingHorizontal: 28,
+                    alignItems: 'center',
+                    borderWidth: 2,
+                    borderColor: '#87CEEB',
+                    shadowColor: '#87CEEB',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 15,
+                    elevation: 8,
+                  }}
+                >
+                  <Text style={{
+                    color: '#F5F5DC',
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    letterSpacing: 1,
+                  }}>
+                    START BLOCK
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </View>
@@ -230,8 +262,8 @@ export default function BlockSummaryCard({
             </View>
           </View>
 
-          {/* Bouton en bas pour portrait */}
-          {onStartBlock && (
+          {/* Boutons en bas pour portrait */}
+          {(onStartBlock || onSelectBlock) && (
             <View style={{
               backgroundColor: '#0F0F10',
               paddingHorizontal: 28,
@@ -239,33 +271,63 @@ export default function BlockSummaryCard({
               paddingBottom: insets.bottom,
               borderTopWidth: 1,
               borderTopColor: 'rgba(135, 206, 235, 0.1)',
+              gap: 12,
             }}>
-              <TouchableOpacity
-                onPress={onStartBlock}
-                style={{
-                  backgroundColor: 'rgba(18, 18, 18, 0.95)',
-                  borderRadius: 18,
-                  paddingVertical: 20,
-                  paddingHorizontal: 40,
-                  alignItems: 'center',
-                  borderWidth: 2,
-                  borderColor: '#87CEEB',
-                  shadowColor: '#87CEEB',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 20,
-                  elevation: 8,
-                }}
-              >
-                <Text style={{
-                  color: '#F5F5DC',
-                  fontSize: 19,
-                  fontWeight: 'bold',
-                  letterSpacing: 1.2,
-                }}>
-                  START BLOCK
-                </Text>
-              </TouchableOpacity>
+              {onSelectBlock && (
+                <TouchableOpacity
+                  onPress={onSelectBlock}
+                  style={{
+                    backgroundColor: 'rgba(18, 18, 18, 0.95)',
+                    borderRadius: 16,
+                    paddingVertical: 16,
+                    paddingHorizontal: 32,
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 10,
+                    borderWidth: 1.5,
+                    borderColor: 'rgba(135, 206, 235, 0.4)',
+                  }}
+                >
+                  <FontAwesome name="list" size={16} color="#87CEEB" />
+                  <Text style={{
+                    color: '#87CEEB',
+                    fontSize: 16,
+                    fontWeight: '600',
+                    letterSpacing: 0.5,
+                  }}>
+                    CHOOSE BLOCK
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {onStartBlock && (
+                <TouchableOpacity
+                  onPress={onStartBlock}
+                  style={{
+                    backgroundColor: 'rgba(18, 18, 18, 0.95)',
+                    borderRadius: 18,
+                    paddingVertical: 20,
+                    paddingHorizontal: 40,
+                    alignItems: 'center',
+                    borderWidth: 2,
+                    borderColor: '#87CEEB',
+                    shadowColor: '#87CEEB',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 20,
+                    elevation: 8,
+                  }}
+                >
+                  <Text style={{
+                    color: '#F5F5DC',
+                    fontSize: 19,
+                    fontWeight: 'bold',
+                    letterSpacing: 1.2,
+                  }}>
+                    START BLOCK
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </View>

@@ -13,6 +13,7 @@ import PortraitReady from '@/components/timers/screens/PortraitReady';
 import LandscapeReady from '@/components/timers/screens/LandscapeReady';
 import BlockTransitionScreen from '@/components/workout/execution/BlockTransitionScreen';
 import TimerRenderer from '@/components/workout/execution/TimerRenderer';
+import BlockSelectorModal from '@/components/workout/execution/BlockSelectorModal';
 
 export default function WorkoutExecutionScreen() {
   const { workoutId } = useLocalSearchParams<{ workoutId: string }>();
@@ -24,8 +25,9 @@ export default function WorkoutExecutionScreen() {
   const [isBlockCompleted, setIsBlockCompleted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isCountdownActive, setIsCountdownActive] = useState(false);
+  const [completedBlocks, setCompletedBlocks] = useState<Set<string>>(new Set());
+  const [showBlockSelector, setShowBlockSelector] = useState(false);
 
-  // Countdown hook
   const countdown = useCountdown({
     initialValue: 10,
     onComplete: () => {
@@ -56,12 +58,25 @@ export default function WorkoutExecutionScreen() {
     }
   };
 
+  const getNextUncompletedBlockIndex = useCallback(() => {
+    if (!workout) return null;
+    
+    for (let i = 0; i < workout.blocks.length; i++) {
+      if (!completedBlocks.has(workout.blocks[i].id)) {
+        return i;
+      }
+    }
+    return null;
+  }, [workout, completedBlocks]);
+
   const currentBlock = workout?.blocks[currentBlockIndex];
-  const nextBlock = workout?.blocks[currentBlockIndex + 1] || null;
-  const isLastBlock = currentBlockIndex === (workout?.blocks.length || 0) - 1;
+  const nextUncompletedBlockIndex = getNextUncompletedBlockIndex();
+  const nextBlock = nextUncompletedBlockIndex !== null && workout 
+    ? workout.blocks[nextUncompletedBlockIndex] 
+    : null;
+  const isLastBlock = nextUncompletedBlockIndex === null;
 
   const handleStartBlock = () => {
-    // Si on vient de terminer un bloc, passer au suivant d'abord
     if (showCelebration && !isLastBlock) {
       handleNextBlock();
     } else {
@@ -88,24 +103,42 @@ export default function WorkoutExecutionScreen() {
     countdown.start();
   };
 
-  // Fonction unifiée pour gérer la fin de bloc (fin naturelle ou swipe to stop)
   const handleBlockEnd = useCallback(() => {
     setIsBlockActive(false);
     setIsBlockCompleted(true);
     setShowCelebration(true);
-  }, []);
+    
+    if (currentBlock) {
+      setCompletedBlocks(prev => {
+        const newSet = new Set([...prev, currentBlock.id]);
+        return newSet;
+      });
+    }
+  }, [currentBlock]);
 
   const handleNextBlock = () => {
-    if (isLastBlock) {
+    const nextIndex = getNextUncompletedBlockIndex();
+    
+    if (nextIndex === null) {
       router.back();
     } else {
-      setCurrentBlockIndex(prev => prev + 1);
+      setCurrentBlockIndex(nextIndex);
       setIsBlockCompleted(false);
       setShowCelebration(false);
-      // Launch next block countdown immediately
       setIsCountdownActive(true);
       countdown.reset();
       countdown.start();
+    }
+  };
+
+  const handleSelectBlock = (blockId: string) => {
+    const blockIndex = workout?.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex !== undefined && blockIndex >= 0) {
+      setCurrentBlockIndex(blockIndex);
+      setIsBlockCompleted(false);
+      setShowCelebration(false);
+      setIsCountdownActive(false);
+      countdown.reset();
     }
   };
 
@@ -186,7 +219,8 @@ export default function WorkoutExecutionScreen() {
           <BlockTransitionScreen
             currentBlock={currentBlock}
             nextBlock={nextBlock}
-            blockIndex={currentBlockIndex}
+            currentBlockIndex={currentBlockIndex}
+            nextBlockIndex={nextUncompletedBlockIndex}
             totalBlocks={workout.blocks.length}
             isLastBlock={isLastBlock}
             showCelebration={showCelebration}
@@ -194,8 +228,20 @@ export default function WorkoutExecutionScreen() {
             onStartBlock={handleStartBlock}
             onNextBlock={handleNextBlock}
             onBack={handleBack}
+            onSelectBlock={() => setShowBlockSelector(true)}
           />
         </View>
+      )}
+
+      {workout && (
+        <BlockSelectorModal
+          visible={showBlockSelector}
+          blocks={workout.blocks}
+          currentBlockId={currentBlock?.id || ''}
+          completedBlocks={completedBlocks}
+          onSelectBlock={handleSelectBlock}
+          onClose={() => setShowBlockSelector(false)}
+        />
       )}
     </SafeAreaView>
   );

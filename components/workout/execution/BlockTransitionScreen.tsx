@@ -8,7 +8,8 @@ import BlockRecapAnimation from './BlockRecapAnimation';
 interface BlockTransitionScreenProps {
   currentBlock: WorkoutBlock | null;
   nextBlock: WorkoutBlock | null;
-  blockIndex: number;
+  currentBlockIndex: number;
+  nextBlockIndex: number | null;
   totalBlocks: number;
   isLastBlock: boolean;
   showCelebration: boolean;
@@ -16,12 +17,14 @@ interface BlockTransitionScreenProps {
   onStartBlock: () => void;
   onNextBlock: () => void;
   onBack?: () => void;
+  onSelectBlock?: () => void;
 }
 
 export default function BlockTransitionScreen({
   currentBlock,
   nextBlock,
-  blockIndex,
+  currentBlockIndex,
+  nextBlockIndex,
   totalBlocks,
   isLastBlock,
   showCelebration,
@@ -29,6 +32,7 @@ export default function BlockTransitionScreen({
   onStartBlock,
   onNextBlock,
   onBack,
+  onSelectBlock,
 }: BlockTransitionScreenProps) {
   const [showRecapAnimation, setShowRecapAnimation] = useState(showCelebration);
 
@@ -105,9 +109,12 @@ export default function BlockTransitionScreen({
     );
   }
 
-  // Déterminer le bloc à afficher
+  // Déterminer le bloc à afficher et son index réel
   const blockToDisplay = showCelebration && nextBlock ? nextBlock : currentBlock;
-  const displayBlockIndex = showCelebration && nextBlock ? blockIndex + 1 : blockIndex;
+  // Utiliser l'index réel du bloc qu'on affiche (pas de +1)
+  const displayBlockIndex = showCelebration && nextBlock && nextBlockIndex !== null 
+    ? nextBlockIndex 
+    : currentBlockIndex;
 
   if (!blockToDisplay) {
     return null;
@@ -119,7 +126,7 @@ export default function BlockTransitionScreen({
       {showRecapAnimation && currentBlock && (
         <BlockRecapAnimation
           blockName={currentBlock.name}
-          blockIndex={blockIndex}
+          blockIndex={currentBlockIndex}
           onAnimationComplete={handleAnimationComplete}
           isLandscape={isLandscape}
         />
@@ -133,7 +140,8 @@ export default function BlockTransitionScreen({
         isLandscape={isLandscape}
         showCompletedRecap={showCelebration}
         onStartBlock={onStartBlock}
-        onBack={blockIndex === 0 && !showCelebration ? onBack : undefined}
+        onBack={currentBlockIndex === 0 && !showCelebration ? onBack : undefined}
+        onSelectBlock={onSelectBlock}
       />
     </View>
   );
