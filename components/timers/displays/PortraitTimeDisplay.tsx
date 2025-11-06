@@ -9,21 +9,29 @@ export function PortraitTimeDisplay({
   isPaused?: boolean;
 }) {
   return (
-    <View>
+    <View style={{ 
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
       <Text
         style={{
           color: '#F5F5DC',
-          fontSize: 54,
+          fontSize: 56, // Réduit pour que le shadow ne soit pas coupé
           fontWeight: 'bold',
           textAlign: 'center',
           textShadowColor: isPaused ? 'rgba(245, 245, 220, 0.3)' : 'rgba(135, 206, 235, 0.4)',
           textShadowOffset: { width: 0, height: 0 },
-          textShadowRadius: 30,
+          textShadowRadius: 25, // Réduit pour éviter le dépassement
           letterSpacing: 1.5,
-          lineHeight: 60,
-          minWidth: 300,
-          width: 300,
+          lineHeight: 62, // Ajusté proportionnellement
+          includeFontPadding: false,
+          paddingHorizontal: 20,
+          paddingVertical: 30, // Padding pour le shadow
         }}
+        adjustsFontSizeToFit
+        numberOfLines={1}
+        minimumFontScale={0.7}
       >
         {timeString}
       </Text>

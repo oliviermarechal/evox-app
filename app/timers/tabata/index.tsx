@@ -92,8 +92,8 @@ export default function TabataScreen() {
     <ConfigComponent 
       onStartCountdown={state.handleStartCountdown}
       initialRounds={roundsParam ? parseInt(roundsParam, 10) : 8}
-      initialWorkTime={workTimeParam ? parseInt(workTimeParam, 10) : 20}
-      initialRestTime={restTimeParam ? parseInt(restTimeParam, 10) : 10}
+      initialWorkTime={workTimeParam ? parseInt(workTimeParam, 10) : 60}
+      initialRestTime={restTimeParam ? parseInt(restTimeParam, 10) : 60}
     />
   );
 }

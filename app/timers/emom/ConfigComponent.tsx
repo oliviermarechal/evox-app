@@ -54,21 +54,25 @@ const generateRoundIntervals = () => {
 const ROUND_INTERVALS = generateRoundIntervals();
 
 const getInitialTimeIndex = (initialDuration?: number) => {
-  if (!initialDuration) return 4;
+  if (!initialDuration) {
+    // Default to 1 minute (60 seconds)
+    const defaultIndex = TIME_INTERVALS.findIndex(interval => interval.value === 60);
+    return defaultIndex >= 0 ? defaultIndex : 4;
+  }
   const index = TIME_INTERVALS.findIndex(interval => interval.value === initialDuration);
   return index >= 0 ? index : 4;
 };
 
 const getInitialRoundIndex = (initialRounds?: number) => {
-  if (!initialRounds) return 9;
+  if (!initialRounds) return 7; // Default to 8 rounds (index 7 = 8th item, 0-indexed)
   const index = ROUND_INTERVALS.findIndex(interval => interval.value === initialRounds);
-  return index >= 0 ? index : 9;
+  return index >= 0 ? index : 7;
 };
 
 export default function ConfigComponent({ 
   onStartCountdown, 
-  initialRounds = 10,
-  initialDuration = 5 
+  initialRounds = 8,
+  initialDuration = 60 
 }: ConfigComponentProps) {
   const { isLandscape } = useOrientation();
   

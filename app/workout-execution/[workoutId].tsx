@@ -211,6 +211,8 @@ export default function WorkoutExecutionScreen() {
               isLandscape={isLandscape}
               onResetTimer={handleBlockEnd}
               skipFinalScreen={true}
+              isWorkout={true}
+              blockIndex={currentBlockIndex}
             />
           )}
         </View>

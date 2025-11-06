@@ -489,6 +489,13 @@ export class IncrementTimerService {
     };
   }
   
+  // Forcer une mise à jour immédiate (utile quand l'app revient au premier plan)
+  public forceUpdate() {
+    if (this.state.isRunning) {
+      this.updateElapsedTime();
+    }
+  }
+  
   public subscribe(listener: (state: any) => void): () => void {
     this.listeners.add(listener);
     return () => {

@@ -1,8 +1,8 @@
 import React from 'react';
 import { useOrientation } from '@/hooks/useOrientation';
 import { useForTimeTimer } from '@/hooks/fortime/useForTimeTimer';
-import PortraitTimer from './portrait/PortraitTimer';
-import LandscapeTimer from './landscape/LandscapeTimer';
+import StandalonePortrait from '@/components/timers/layouts/StandalonePortrait';
+import StandaloneLandscape from '@/components/timers/layouts/StandaloneLandscape';
 import { ForTimeFinalScreen } from '@/components/timers/screens/ForTimeFinalScreen';
 
 export interface ForTimeConfig {
@@ -30,44 +30,33 @@ export default function TimerComponent({ config, onResetTimer, skipFinalScreen =
     }
   }, [skipFinalScreen, state.finalTime, onResetTimer]);
 
-  // Dans le contexte workout, ne pas afficher l'écran final
   if (skipFinalScreen && state.finalTime) {
     return null;
   }
 
-  // Afficher l'écran final si le timer est terminé (sauf si skipFinalScreen)
-  if (state.finalTime && !skipFinalScreen) {
-    return (
-      <ForTimeFinalScreen
-        finalTime={state.finalTime}
-        currentRound={state.currentRound}
-        timeCap={`${config.minutes}:${config.seconds.toString().padStart(2, '0')}`}
-        onReset={onResetTimer}
-        isLandscape={isLandscape}
-      />
-    );
-  }
+  const finalScreen = state.finalTime && !skipFinalScreen ? (
+    <ForTimeFinalScreen
+      finalTime={state.finalTime}
+      currentRound={state.currentRound}
+      timeCap={`${config.minutes}:${config.seconds.toString().padStart(2, '0')}`}
+      onReset={onResetTimer}
+      isLandscape={isLandscape}
+    />
+  ) : undefined;
 
-  const commonProps = {
-    config,
-    onResetTimer,
-    // Passer l'état et les actions du hook
-    remainingMilliseconds: state.remainingMilliseconds,
-    isRunning: state.isRunning,
+  const props = {
+    label: 'FOR TIME',
+    subtitle: state.isPaused ? 'PAUSED' : state.isRunning ? 'RUNNING' : 'READY',
+    timeString: formatTime(state.remainingMilliseconds),
     isPaused: state.isPaused,
+    onTogglePause: state.isPaused ? actions.startTimer : actions.pauseTimer,
     currentRound: state.currentRound,
-    finalTime: state.finalTime,
-    isOnFire: state.isOnFire,
-    startTimer: actions.startTimer,
-    pauseTimer: actions.pauseTimer,
-    incrementRound: actions.incrementRound,
-    finishTimer: actions.finishTimer,
-    formatTime
+    onAddRound: actions.incrementRound,
+    onFinish: actions.finishTimer,
+    finalScreen,
   };
 
-  if (isLandscape) {
-    return <LandscapeTimer {...commonProps} />;
-  } else {
-    return <PortraitTimer {...commonProps} />;
-  }
+  return isLandscape 
+    ? <StandaloneLandscape {...props} />
+    : <StandalonePortrait {...props} />;
 }

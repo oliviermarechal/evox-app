@@ -21,34 +21,18 @@ export interface FreeTimerActions {
 export function useFreeTimer() {
   const [finalTime, setFinalTime] = useState<string | null>(null);
   const [currentRound, setCurrentRound] = useState(0);
-  const [preciseMilliseconds, setPreciseMilliseconds] = useState(0);
   const hasAutoStarted = useRef(false);
 
   const timer = useIncrementTimer({});
 
-  const formatTime = useCallback((ms: number): string => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    const centiseconds = Math.floor((ms % 1000) / 10);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
+  const formatTime = useCallback((seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const secondsRemaining = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${secondsRemaining.toString().padStart(2, '0')}`;
   }, []);
 
-  useEffect(() => {
-    if (!timer.isRunning) return;
-
-    const interval = setInterval(() => {
-      // Accéder aux propriétés internes du timer
-      const internalState = timer.getInternalState?.();
-      if (internalState) {
-        const now = Date.now();
-        const elapsedMs = now - internalState.startTime - internalState.totalPausedDuration;
-        setPreciseMilliseconds(Math.max(0, elapsedMs));
-      }
-    }, 10);
-
-    return () => clearInterval(interval);
-  }, [timer.isRunning, timer]);
+  // Utiliser directement elapsedTime du timer au lieu de recalculer
+  const totalMilliseconds = timer.elapsedTime * 1000;
 
   // Activer le keep awake dès le montage du composant et le garder actif même en pause
   useEffect(() => {
@@ -74,14 +58,13 @@ export function useFreeTimer() {
 
   const finishTimer = useCallback(() => {
     timer.pause();
-    setFinalTime(formatTime(preciseMilliseconds));
-  }, [timer, formatTime, preciseMilliseconds]);
+    setFinalTime(formatTime(timer.elapsedTime));
+  }, [timer, formatTime]);
 
   const resetTimer = useCallback(() => {
     timer.reset();
     setFinalTime(null);
     setCurrentRound(0);
-    setPreciseMilliseconds(0);
     hasAutoStarted.current = false;
   }, [timer]);
 
@@ -96,7 +79,7 @@ export function useFreeTimer() {
   }, []);
 
   const state: FreeTimerState = {
-    totalMilliseconds: preciseMilliseconds,
+    totalMilliseconds: totalMilliseconds,
     isRunning: timer.isRunning,
     isPaused: timer.isPaused,
     finalTime,

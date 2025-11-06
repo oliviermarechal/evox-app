@@ -1,29 +1,36 @@
 import React from 'react';
 import { useOrientation } from '@/hooks/useOrientation';
-import { useAMRAPTimer } from '@/hooks/amrap/useAMRAPTimer';
-import StandalonePortrait from '@/components/timers/layouts/StandalonePortrait';
-import StandaloneLandscape from '@/components/timers/layouts/StandaloneLandscape';
-import { AMRAPFinalScreen } from '@/components/timers/screens/AMRAPFinalScreen';
+import { useForTimeTimer } from '@/hooks/fortime/useForTimeTimer';
+import { WorkoutBlock } from '@/lib/types';
+import WorkoutPortrait from '@/components/timers/layouts/WorkoutPortrait';
+import WorkoutLandscape from '@/components/timers/layouts/WorkoutLandscape';
+import { ForTimeFinalScreen } from '@/components/timers/screens/ForTimeFinalScreen';
 
-interface AMRAPConfig {
+interface ForTimeConfig {
   minutes: number;
   seconds: number;
 }
 
-interface TimerComponentProps {
-  config: AMRAPConfig;
+interface WorkoutForTimeTimerProps {
+  config: ForTimeConfig;
+  block: WorkoutBlock;
+  blockIndex: number;
   onResetTimer: () => void;
   skipFinalScreen?: boolean;
 }
 
-export default function TimerComponent({ config, onResetTimer, skipFinalScreen = false }: TimerComponentProps) {
+export default function WorkoutForTimeTimer({ 
+  config, 
+  block, 
+  blockIndex,
+  onResetTimer, 
+  skipFinalScreen = false 
+}: WorkoutForTimeTimerProps) {
   const { isLandscape } = useOrientation();
-  const { state, actions, formatTime } = useAMRAPTimer(config);
+  const { state, actions, formatTime } = useForTimeTimer(config);
   
-  // Dans le contexte workout, si finalTime est défini, appeler directement onResetTimer
   React.useEffect(() => {
     if (skipFinalScreen && state.finalTime && onResetTimer) {
-      // Petit délai pour s'assurer que le timer a bien fini
       const timer = setTimeout(() => {
         onResetTimer();
       }, 100);
@@ -31,15 +38,12 @@ export default function TimerComponent({ config, onResetTimer, skipFinalScreen =
     }
   }, [skipFinalScreen, state.finalTime, onResetTimer]);
 
-  // Dans le contexte workout, ne pas afficher l'écran final, retourner null
-  // Le useEffect ci-dessus appellera onResetTimer
   if (skipFinalScreen && state.finalTime) {
     return null;
   }
 
-  // Préparer l'écran final si nécessaire
-  const finalScreen = state.finalTime ? (
-    <AMRAPFinalScreen
+  const finalScreen = state.finalTime && !skipFinalScreen ? (
+    <ForTimeFinalScreen
       finalTime={state.finalTime}
       currentRound={state.currentRound}
       timeCap={`${config.minutes}:${config.seconds.toString().padStart(2, '0')}`}
@@ -49,18 +53,20 @@ export default function TimerComponent({ config, onResetTimer, skipFinalScreen =
   ) : undefined;
 
   const props = {
-    label: 'AMRAP TIMER',
-    subtitle: `Round ${state.currentRound}`,
+    label: `ForTime - Block ${blockIndex + 1}`,
+    subtitle: state.currentRound > 0 ? `Round ${state.currentRound}` : undefined,
     timeString: formatTime(state.remainingMilliseconds),
     isPaused: state.isPaused,
     onTogglePause: state.isPaused ? actions.startTimer : actions.pauseTimer,
     currentRound: state.currentRound,
     onAddRound: actions.incrementRound,
     onFinish: actions.finishTimer,
+    exercises: block.exercises,
     finalScreen,
   };
 
   return isLandscape 
-    ? <StandaloneLandscape {...props} />
-    : <StandalonePortrait {...props} />;
+    ? <WorkoutLandscape {...props} />
+    : <WorkoutPortrait {...props} />;
 }
+

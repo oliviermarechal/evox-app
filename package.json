@@ -13,8 +13,8 @@
     "build:android:dev": "APP_VARIANT=development eas build --profile development --platform android",
     "build:ios:prod": "APP_VARIANT=production eas build --profile production --platform ios",
     "build:android:prod": "APP_VARIANT=production eas build --profile production --platform android",
-    "ota": "eas update --profile production --channel production",
-    "ota:dev": "eas update --profile development --channel development"
+    "ota": "eas update --channel production",
+    "ota:dev": "eas update --channel development"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

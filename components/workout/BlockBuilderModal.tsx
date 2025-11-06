@@ -36,17 +36,17 @@ export default function BlockBuilderModal({
   
   // WheelPicker states
   const [selectedDurationIndex, setSelectedDurationIndex] = useState(0);
-  const [selectedRoundsIndex, setSelectedRoundsIndex] = useState(0);
-  const [selectedIntervalIndex, setSelectedIntervalIndex] = useState(0);
-  const [selectedWorkTimeIndex, setSelectedWorkTimeIndex] = useState(0);
-  const [selectedRestTimeIndex, setSelectedRestTimeIndex] = useState(0);
+  const [selectedRoundsIndex, setSelectedRoundsIndex] = useState(7); // Default to 8 rounds
+  const [selectedIntervalIndex, setSelectedIntervalIndex] = useState(4); // Default to 1 min
+  const [selectedWorkTimeIndex, setSelectedWorkTimeIndex] = useState(5); // Default to 1 min
+  const [selectedRestTimeIndex, setSelectedRestTimeIndex] = useState(5); // Default to 1 min
   const [selectedForTimeIndex, setSelectedForTimeIndex] = useState(0);
   const [timerConfig, setTimerConfig] = useState({
     duration: 10, // AMRAP
-    rounds: 10, // EMOM
+    rounds: 8, // EMOM
     intervalDuration: 60, // EMOM
-    workTime: 20, // Tabata
-    restTime: 10, // Tabata
+    workTime: 60, // Tabata
+    restTime: 60, // Tabata
     targetTime: 0, // ForTime
   });
 
@@ -71,11 +71,15 @@ export default function BlockBuilderModal({
       const restTimeIndex = restTimeOptions.findIndex(opt => opt.value === editingBlock.timerConfig.restTime);
       const forTimeIndex = forTimeOptions.findIndex(opt => opt.value === editingBlock.timerConfig.targetTime);
       
+      // Default indices if not found (for Tabata)
+      const defaultWorkTimeIndex = workTimeIndex >= 0 ? workTimeIndex : 5; // Default to 1 min
+      const defaultRestTimeIndex = restTimeIndex >= 0 ? restTimeIndex : 5; // Default to 1 min
+      
       setSelectedDurationIndex(durationIndex >= 0 ? durationIndex : 0);
-      setSelectedRoundsIndex(roundsIndex >= 0 ? roundsIndex : 0);
-      setSelectedIntervalIndex(intervalIndex >= 0 ? intervalIndex : 0);
-      setSelectedWorkTimeIndex(workTimeIndex >= 0 ? workTimeIndex : 0);
-      setSelectedRestTimeIndex(restTimeIndex >= 0 ? restTimeIndex : 0);
+      setSelectedRoundsIndex(roundsIndex >= 0 ? roundsIndex : 7); // Default to 8 rounds
+      setSelectedIntervalIndex(intervalIndex >= 0 ? intervalIndex : TIME_INTERVALS.findIndex(opt => opt.value === 60) >= 0 ? TIME_INTERVALS.findIndex(opt => opt.value === 60) : 0); // Default to 1 min
+      setSelectedWorkTimeIndex(defaultWorkTimeIndex);
+      setSelectedRestTimeIndex(defaultRestTimeIndex);
       setSelectedForTimeIndex(forTimeIndex >= 0 ? forTimeIndex : 0);
       
       // Initialiser la case à cocher Rest Time
@@ -88,19 +92,19 @@ export default function BlockBuilderModal({
       setSets(undefined);
       setTimerConfig({
         duration: 10,
-        rounds: 10,
+        rounds: 8,
         intervalDuration: 60,
-        workTime: 20,
+        workTime: 60,
         restTime: 60, // Rest time par défaut pour ForTime
         targetTime: 0,
       });
       
-      // Reset des indices
+      // Reset des indices avec valeurs par défaut
       setSelectedDurationIndex(0);
-      setSelectedRoundsIndex(0);
-      setSelectedIntervalIndex(0);
-      setSelectedWorkTimeIndex(0);
-      setSelectedRestTimeIndex(0);
+      setSelectedRoundsIndex(7); // Default to 8 rounds
+      setSelectedIntervalIndex(4); // Default to 1 min (60s is at index 4 in TIME_INTERVALS)
+      setSelectedWorkTimeIndex(5); // Default to 1 min (index 5 in TABATA_TIME_INTERVALS)
+      setSelectedRestTimeIndex(5); // Default to 1 min (index 5 in TABATA_TIME_INTERVALS)
       setSelectedForTimeIndex(0);
       setShowRestTime(false);
     }
@@ -193,16 +197,52 @@ export default function BlockBuilderModal({
     return intervals;
   };
 
+  // Generate rounded/probable time intervals for Tabata (10s to 10min)
+  const generateTabataTimeIntervals = () => {
+    const intervals = [];
+    
+    // Seconds: 10, 15, 20, 30, 45
+    intervals.push({ value: 10, label: '10s' });
+    intervals.push({ value: 15, label: '15s' });
+    intervals.push({ value: 20, label: '20s' });
+    intervals.push({ value: 30, label: '30s' });
+    intervals.push({ value: 45, label: '45s' });
+    
+    // Minutes: 1, 1:30, 2, 2:30, 3, 3:30, 4, 4:30, 5, 5:30, 6, 6:30, 7, 7:30, 8, 8:30, 9, 9:30, 10
+    intervals.push({ value: 60, label: '1 min' });
+    intervals.push({ value: 90, label: '1:30' });
+    intervals.push({ value: 120, label: '2 min' });
+    intervals.push({ value: 150, label: '2:30' });
+    intervals.push({ value: 180, label: '3 min' });
+    intervals.push({ value: 210, label: '3:30' });
+    intervals.push({ value: 240, label: '4 min' });
+    intervals.push({ value: 270, label: '4:30' });
+    intervals.push({ value: 300, label: '5 min' });
+    intervals.push({ value: 330, label: '5:30' });
+    intervals.push({ value: 360, label: '6 min' });
+    intervals.push({ value: 390, label: '6:30' });
+    intervals.push({ value: 420, label: '7 min' });
+    intervals.push({ value: 450, label: '7:30' });
+    intervals.push({ value: 480, label: '8 min' });
+    intervals.push({ value: 510, label: '8:30' });
+    intervals.push({ value: 540, label: '9 min' });
+    intervals.push({ value: 570, label: '9:30' });
+    intervals.push({ value: 600, label: '10 min' });
+    
+    return intervals;
+  };
+
   const TIME_INTERVALS = generateTimeIntervals();
   const AMRAP_INTERVALS = generateAMRAPIntervals();
   const ROUND_INTERVALS = generateRoundIntervals();
   const FOR_TIME_INTERVALS = generateForTimeIntervals();
+  const TABATA_TIME_INTERVALS = generateTabataTimeIntervals();
   
   const durationOptions = selectedTimer === 'AMRAP' ? AMRAP_INTERVALS : TIME_INTERVALS;
   const roundsOptions = ROUND_INTERVALS;
   const intervalOptions = TIME_INTERVALS;
-  const workTimeOptions = TIME_INTERVALS;
-  const restTimeOptions = TIME_INTERVALS;
+  const workTimeOptions = TABATA_TIME_INTERVALS;
+  const restTimeOptions = TABATA_TIME_INTERVALS;
   const forTimeOptions = FOR_TIME_INTERVALS;
 
   const handleTimerSelect = (timer: typeof selectedTimer) => {
@@ -574,52 +614,7 @@ export default function BlockBuilderModal({
                     </Text>
                     
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 16 }}>
-                      {/* Rounds WheelPicker */}
-                      <View style={{
-                        backgroundColor: 'rgba(135, 206, 235, 0.05)',
-                        borderRadius: 16,
-                        padding: 20,
-                        borderWidth: 1.5,
-                        borderColor: 'rgba(135, 206, 235, 0.3)',
-                        alignItems: 'center',
-                        shadowColor: '#87CEEB',
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.4,
-                        elevation: 8,
-                        flex: 1
-                      }}>
-                        <Text style={{
-                          color: 'rgba(135, 206, 235, 0.8)',
-                          fontSize: 12,
-                          fontWeight: '500',
-                          marginBottom: 16,
-                          textAlign: 'center',
-                          letterSpacing: 1,
-                          opacity: 0.8
-                        }}>
-                          ROUNDS
-                        </Text>
-                        <View style={{ 
-                          height: 200,
-                          width: '100%',
-                          borderRadius: 12,
-                          overflow: 'hidden'
-                        }}>
-                          <WheelPicker
-                            items={roundsOptions}
-                            selectedIndex={selectedRoundsIndex}
-                            onIndexChange={(index) => {
-                              setSelectedRoundsIndex(index);
-                              setTimerConfig(prev => ({ ...prev, rounds: roundsOptions[index].value }));
-                            }}
-                            width="100%"
-                            itemHeight={40}
-                            visibleItems={5}
-                          />
-                        </View>
-                      </View>
-
-                      {/* Duration WheelPicker */}
+                      {/* Duration WheelPicker - Now first */}
                       <View style={{
                         backgroundColor: 'rgba(135, 206, 235, 0.05)',
                         borderRadius: 16,
@@ -656,6 +651,51 @@ export default function BlockBuilderModal({
                             onIndexChange={(index) => {
                               setSelectedIntervalIndex(index);
                               setTimerConfig(prev => ({ ...prev, intervalDuration: intervalOptions[index].value }));
+                            }}
+                            width="100%"
+                            itemHeight={40}
+                            visibleItems={5}
+                          />
+                        </View>
+                      </View>
+
+                      {/* Rounds WheelPicker - Now second */}
+                      <View style={{
+                        backgroundColor: 'rgba(135, 206, 235, 0.05)',
+                        borderRadius: 16,
+                        padding: 20,
+                        borderWidth: 1.5,
+                        borderColor: 'rgba(135, 206, 235, 0.3)',
+                        alignItems: 'center',
+                        shadowColor: '#87CEEB',
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.4,
+                        elevation: 8,
+                        flex: 1
+                      }}>
+                        <Text style={{
+                          color: 'rgba(135, 206, 235, 0.8)',
+                          fontSize: 12,
+                          fontWeight: '500',
+                          marginBottom: 16,
+                          textAlign: 'center',
+                          letterSpacing: 1,
+                          opacity: 0.8
+                        }}>
+                          ROUNDS
+                        </Text>
+                        <View style={{ 
+                          height: 200,
+                          width: '100%',
+                          borderRadius: 12,
+                          overflow: 'hidden'
+                        }}>
+                          <WheelPicker
+                            items={roundsOptions}
+                            selectedIndex={selectedRoundsIndex}
+                            onIndexChange={(index) => {
+                              setSelectedRoundsIndex(index);
+                              setTimerConfig(prev => ({ ...prev, rounds: roundsOptions[index].value }));
                             }}
                             width="100%"
                             itemHeight={40}

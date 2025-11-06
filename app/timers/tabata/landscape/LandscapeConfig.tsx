@@ -11,19 +11,30 @@ interface TabataConfig {
   restTime: number;
 }
 
+interface TimeInterval {
+  label: string;
+  value: number;
+}
+
 interface LandscapeConfigProps {
   config: TabataConfig;
   onRoundsChange: (value: number) => void;
-  onWorkTimeChange: (value: number) => void;
-  onRestTimeChange: (value: number) => void;
+  workTimeIndex: number;
+  restTimeIndex: number;
+  onWorkTimeIndexChange: (index: number) => void;
+  onRestTimeIndexChange: (index: number) => void;
+  timeIntervals: TimeInterval[];
   onStartCountdown: () => void;
 }
 
 export default function LandscapeConfig({
   config,
   onRoundsChange,
-  onWorkTimeChange,
-  onRestTimeChange,
+  workTimeIndex,
+  restTimeIndex,
+  onWorkTimeIndexChange,
+  onRestTimeIndexChange,
+  timeIntervals,
   onStartCountdown,
 }: LandscapeConfigProps) {
   // Generate options for rounds (1-20)
@@ -32,22 +43,8 @@ export default function LandscapeConfig({
     value: i + 1
   }));
 
-  // Generate options for work time (5-60 seconds)
-  const workTimeOptions = Array.from({ length: 56 }, (_, i) => ({
-    label: `${i + 5}s`,
-    value: i + 5
-  }));
-
-  // Generate options for rest time (5-60 seconds)
-  const restTimeOptions = Array.from({ length: 56 }, (_, i) => ({
-    label: `${i + 5}s`,
-    value: i + 5
-  }));
-
-  // Get selected indices
+  // Get selected index for rounds
   const selectedRoundsIndex = config.rounds - 1;
-  const selectedWorkTimeIndex = config.workTime - 5;
-  const selectedRestTimeIndex = config.restTime - 5;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0F0F10' }}>
@@ -165,9 +162,9 @@ export default function LandscapeConfig({
                 overflow: 'hidden'
               }}>
                 <WheelPicker
-                  items={workTimeOptions}
-                  selectedIndex={selectedWorkTimeIndex}
-                  onIndexChange={(index) => onWorkTimeChange(index + 5)}
+                  items={timeIntervals}
+                  selectedIndex={workTimeIndex}
+                  onIndexChange={onWorkTimeIndexChange}
                   itemHeight={32}
                   visibleItems={5}
                   width={100}
@@ -207,9 +204,9 @@ export default function LandscapeConfig({
                 overflow: 'hidden'
               }}>
                 <WheelPicker
-                  items={restTimeOptions}
-                  selectedIndex={selectedRestTimeIndex}
-                  onIndexChange={(index) => onRestTimeChange(index + 5)}
+                  items={timeIntervals}
+                  selectedIndex={restTimeIndex}
+                  onIndexChange={onRestTimeIndexChange}
                   itemHeight={32}
                   visibleItems={5}
                   width={100}
@@ -255,7 +252,7 @@ export default function LandscapeConfig({
             textShadowOffset: { width: 0, height: 0 },
             textShadowRadius: 15
           }}>
-            {config.rounds} Rounds • {config.workTime}s work • {config.restTime}s rest
+            {config.rounds} Rounds • {timeIntervals.find(item => item.value === config.workTime)?.label || `${config.workTime}s`} work • {timeIntervals.find(item => item.value === config.restTime)?.label || `${config.restTime}s`} rest
           </Text>
 
           {/* Start Button - White text like AMRAP */}

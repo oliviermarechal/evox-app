@@ -83,7 +83,7 @@ export default function LandscapeConfig({
             width: '100%',
             marginBottom: 32,
           }}>
-            {/* Duration WheelPicker */}
+            {/* Duration WheelPicker - Now first */}
             <View style={{
               backgroundColor: 'rgba(135, 206, 235, 0.05)',
               borderRadius: 16,
@@ -125,7 +125,7 @@ export default function LandscapeConfig({
               </View>
             </View>
 
-            {/* Rounds WheelPicker */}
+            {/* Rounds WheelPicker - Now second */}
             <View style={{
               backgroundColor: 'rgba(135, 206, 235, 0.05)',
               borderRadius: 16,

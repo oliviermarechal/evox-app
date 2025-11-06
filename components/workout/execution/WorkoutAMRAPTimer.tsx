@@ -1,8 +1,9 @@
 import React from 'react';
 import { useOrientation } from '@/hooks/useOrientation';
 import { useAMRAPTimer } from '@/hooks/amrap/useAMRAPTimer';
-import StandalonePortrait from '@/components/timers/layouts/StandalonePortrait';
-import StandaloneLandscape from '@/components/timers/layouts/StandaloneLandscape';
+import { WorkoutBlock } from '@/lib/types';
+import WorkoutPortrait from '@/components/timers/layouts/WorkoutPortrait';
+import WorkoutLandscape from '@/components/timers/layouts/WorkoutLandscape';
 import { AMRAPFinalScreen } from '@/components/timers/screens/AMRAPFinalScreen';
 
 interface AMRAPConfig {
@@ -10,20 +11,27 @@ interface AMRAPConfig {
   seconds: number;
 }
 
-interface TimerComponentProps {
+interface WorkoutAMRAPTimerProps {
   config: AMRAPConfig;
+  block: WorkoutBlock;
+  blockIndex: number;
   onResetTimer: () => void;
   skipFinalScreen?: boolean;
 }
 
-export default function TimerComponent({ config, onResetTimer, skipFinalScreen = false }: TimerComponentProps) {
+export default function WorkoutAMRAPTimer({ 
+  config, 
+  block, 
+  blockIndex,
+  onResetTimer, 
+  skipFinalScreen = false 
+}: WorkoutAMRAPTimerProps) {
   const { isLandscape } = useOrientation();
   const { state, actions, formatTime } = useAMRAPTimer(config);
   
   // Dans le contexte workout, si finalTime est défini, appeler directement onResetTimer
   React.useEffect(() => {
     if (skipFinalScreen && state.finalTime && onResetTimer) {
-      // Petit délai pour s'assurer que le timer a bien fini
       const timer = setTimeout(() => {
         onResetTimer();
       }, 100);
@@ -31,8 +39,7 @@ export default function TimerComponent({ config, onResetTimer, skipFinalScreen =
     }
   }, [skipFinalScreen, state.finalTime, onResetTimer]);
 
-  // Dans le contexte workout, ne pas afficher l'écran final, retourner null
-  // Le useEffect ci-dessus appellera onResetTimer
+  // Si skipFinalScreen et timer terminé, ne rien afficher
   if (skipFinalScreen && state.finalTime) {
     return null;
   }
@@ -49,7 +56,7 @@ export default function TimerComponent({ config, onResetTimer, skipFinalScreen =
   ) : undefined;
 
   const props = {
-    label: 'AMRAP TIMER',
+    label: `AMRAP - Block ${blockIndex + 1}`,
     subtitle: `Round ${state.currentRound}`,
     timeString: formatTime(state.remainingMilliseconds),
     isPaused: state.isPaused,
@@ -57,10 +64,12 @@ export default function TimerComponent({ config, onResetTimer, skipFinalScreen =
     currentRound: state.currentRound,
     onAddRound: actions.incrementRound,
     onFinish: actions.finishTimer,
+    exercises: block.exercises,
     finalScreen,
   };
 
   return isLandscape 
-    ? <StandaloneLandscape {...props} />
-    : <StandalonePortrait {...props} />;
+    ? <WorkoutLandscape {...props} />
+    : <WorkoutPortrait {...props} />;
 }
+

@@ -165,9 +165,8 @@ export function useTabataTimer(config: TabataConfig) {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    const ms = Math.floor((milliseconds % 1000) / 10);
     
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }, []);
   
   const getInternalState = useCallback(() => {
@@ -179,7 +178,20 @@ export function useTabataTimer(config: TabataConfig) {
     setFinalTime(formatTime(preciseMilliseconds));
   }, [formatTime, preciseMilliseconds]);
   
-  // Mettre à jour les millisecondes précises toutes les 10ms pour l'effet "nerveux"
+  // Mettre à jour immédiatement quand la phase ou le round change
+  useEffect(() => {
+    if (!state.isRunning) return;
+    
+    const internalState = getInternalState();
+    if (internalState) {
+      const now = Date.now();
+      const elapsedInPhase = now - internalState.phaseStartTime - internalState.totalPausedDuration;
+      const remainingMs = Math.max(0, internalState.phaseDuration - elapsedInPhase);
+      setPreciseMilliseconds(remainingMs);
+    }
+  }, [state.currentRound, state.isWorkPhase, state.isRunning, getInternalState]);
+
+  // Mettre à jour toutes les secondes (pas besoin de millisecondes précises)
   useEffect(() => {
     if (!state.isRunning) return;
 
@@ -191,7 +203,7 @@ export function useTabataTimer(config: TabataConfig) {
         const remainingMs = Math.max(0, internalState.phaseDuration - elapsedInPhase);
         setPreciseMilliseconds(remainingMs);
       }
-    }, 10);
+    }, 1000); // 1 seconde au lieu de 10ms
 
     return () => clearInterval(interval);
   }, [state.isRunning, state.currentRound, state.isWorkPhase, getInternalState]);
@@ -272,9 +284,8 @@ export function useEMOMTimer(config: EMOMConfig) {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    const ms = Math.floor((milliseconds % 1000) / 10);
     
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }, []);
   
   const getInternalState = useCallback(() => {
@@ -285,8 +296,22 @@ export function useEMOMTimer(config: EMOMConfig) {
     timerRef.current?.pause();
     setFinalTime(formatTime(preciseMilliseconds));
   }, [formatTime, preciseMilliseconds]);
-  
-  // Mettre à jour les millisecondes précises toutes les 10ms pour l'effet "nerveux"
+
+  // Mettre à jour immédiatement quand le round change
+  useEffect(() => {
+    if (!state.isRunning) return;
+    
+    const internalState = getInternalState();
+    if (internalState) {
+      const now = Date.now();
+      const roundDurationMs = internalState.roundDurationMs;
+      const elapsedTotalMs = Math.max(0, now - internalState.startTime - internalState.totalPausedDuration);
+      const remainingInRoundMs = roundDurationMs - (elapsedTotalMs % roundDurationMs);
+      setPreciseMilliseconds(Math.max(0, remainingInRoundMs));
+    }
+  }, [state.currentRound, state.isRunning, getInternalState]);
+
+  // Mettre à jour toutes les secondes (pas besoin de millisecondes précises)
   useEffect(() => {
     if (!state.isRunning) return;
 
@@ -299,10 +324,10 @@ export function useEMOMTimer(config: EMOMConfig) {
         const remainingInRoundMs = roundDurationMs - (elapsedTotalMs % roundDurationMs);
         setPreciseMilliseconds(Math.max(0, remainingInRoundMs));
       }
-    }, 10);
+    }, 1000); // 1 seconde au lieu de 10ms
 
     return () => clearInterval(interval);
-  }, [state.isRunning, getInternalState]);
+  }, [state.isRunning, state.currentRound, getInternalState]);
   
   // Auto-start timer when component mounts
   useEffect(() => {
@@ -381,8 +406,7 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    const centiseconds = Math.floor((milliseconds % 1000) / 10);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }, []);
   
   const getInternalState = useCallback(() => {
@@ -400,7 +424,7 @@ export function useAMRAPTimer(config: AMRAPConfig) {
     setFinalTime(formatTime(elapsed));
   }, [formatTime, preciseMilliseconds, config.minutes, config.seconds]);
   
-  // Mettre à jour les millisecondes précises toutes les 10ms pour l'effet "nerveux"
+  // Mettre à jour toutes les secondes (pas besoin de millisecondes précises)
   useEffect(() => {
     if (!state.isRunning) return;
 
@@ -411,7 +435,7 @@ export function useAMRAPTimer(config: AMRAPConfig) {
         const remainingMs = Math.max(0, internalState.targetEndTime - now);
         setPreciseMilliseconds(remainingMs);
       }
-    }, 10);
+    }, 1000); // 1 seconde au lieu de 10ms
 
     return () => clearInterval(interval);
   }, [state.isRunning, getInternalState]);
@@ -498,8 +522,7 @@ export function useForTimeTimer(config: ForTimeConfig) {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    const centiseconds = Math.floor((milliseconds % 1000) / 10);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }, []);
   
   const getInternalState = useCallback(() => {

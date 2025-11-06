@@ -1,8 +1,9 @@
 import React from 'react';
 import { useOrientation } from '@/hooks/useOrientation';
 import { useTabataTimer } from '@/hooks/tabata/useTabataTimer';
-import StandalonePortrait from '@/components/timers/layouts/StandalonePortrait';
-import StandaloneLandscape from '@/components/timers/layouts/StandaloneLandscape';
+import { WorkoutBlock } from '@/lib/types';
+import WorkoutPortrait from '@/components/timers/layouts/WorkoutPortrait';
+import WorkoutLandscape from '@/components/timers/layouts/WorkoutLandscape';
 import TabataFinalScreen from '@/components/timers/screens/TabataFinalScreen';
 
 interface TabataConfig {
@@ -11,19 +12,25 @@ interface TabataConfig {
   restTime: number;
 }
 
-interface TimerComponentProps {
+interface WorkoutTabataTimerProps {
   config: TabataConfig;
+  block: WorkoutBlock;
+  blockIndex: number;
   isLandscape: boolean;
   onResetTimer: () => void;
   skipFinalScreen?: boolean;
 }
 
-export default function TimerComponent({ config, isLandscape, onResetTimer, skipFinalScreen = false }: TimerComponentProps) {
-  const { isLandscape: orientationIsLandscape } = useOrientation();
-  const effectiveIsLandscape = isLandscape ?? orientationIsLandscape;
+export default function WorkoutTabataTimer({ 
+  config, 
+  block, 
+  blockIndex,
+  isLandscape,
+  onResetTimer, 
+  skipFinalScreen = false 
+}: WorkoutTabataTimerProps) {
   const state = useTabataTimer(config);
-
-  // Dans le contexte workout, si finalTime est défini, appeler directement onResetTimer
+  
   React.useEffect(() => {
     if (skipFinalScreen && state.finalTime && onResetTimer) {
       const timer = setTimeout(() => {
@@ -44,27 +51,28 @@ export default function TimerComponent({ config, isLandscape, onResetTimer, skip
       workTime={config.workTime}
       restTime={config.restTime}
       onReset={onResetTimer}
-      isLandscape={effectiveIsLandscape}
+      isLandscape={isLandscape}
     />
   ) : undefined;
 
   const phaseLabel = state.isWorkPhase ? 'WORK' : 'REST';
-
+  
   const props = {
-    label: 'TABATA TIMER',
-    subtitle: `Round ${state.currentRound} • ${phaseLabel}`,
+    label: `Tabata - Block ${blockIndex + 1}`,
+    subtitle: `Round ${state.currentRound} / ${config.rounds} • ${phaseLabel}`,
     timeString: state.formatTime(state.remainingMilliseconds),
     isPaused: state.isPaused,
     onTogglePause: state.isPaused ? state.startTimer : state.pauseTimer,
     currentRound: state.currentRound,
     totalRounds: config.rounds,
-    isRestPhase: !state.isWorkPhase,
-    onAddRound: undefined,
+    onAddRound: undefined, // Tabata n'a pas de bouton add round
     onFinish: state.finishTimer,
+    exercises: block.exercises,
     finalScreen,
   };
 
-  return effectiveIsLandscape 
-    ? <StandaloneLandscape {...props} />
-    : <StandalonePortrait {...props} />;
+  return isLandscape 
+    ? <WorkoutLandscape {...props} />
+    : <WorkoutPortrait {...props} />;
 }
+

@@ -1,21 +1,27 @@
 import React from 'react';
 import { useOrientation } from '@/hooks/useOrientation';
 import { useFreeTimer } from '@/hooks/free/useFreeTimer';
-import StandalonePortrait from '@/components/timers/layouts/StandalonePortrait';
-import StandaloneLandscape from '@/components/timers/layouts/StandaloneLandscape';
+import { WorkoutBlock } from '@/lib/types';
+import WorkoutPortrait from '@/components/timers/layouts/WorkoutPortrait';
+import WorkoutLandscape from '@/components/timers/layouts/WorkoutLandscape';
 import { FreeFinalScreen } from '@/components/timers/screens/FreeFinalScreen';
 
-interface TimerComponentProps {
+interface WorkoutFreeTimerProps {
+  block: WorkoutBlock;
+  blockIndex: number;
   onResetTimer: () => void;
-  onBackPress?: () => void;
   skipFinalScreen?: boolean;
 }
 
-export default function TimerComponent({ onResetTimer, onBackPress, skipFinalScreen = false }: TimerComponentProps) {
+export default function WorkoutFreeTimer({ 
+  block, 
+  blockIndex,
+  onResetTimer, 
+  skipFinalScreen = false 
+}: WorkoutFreeTimerProps) {
   const { isLandscape } = useOrientation();
   const { state, actions, formatTime } = useFreeTimer();
-
-  // Dans le contexte workout, si finalTime est défini, appeler directement onResetTimer
+  
   React.useEffect(() => {
     if (skipFinalScreen && state.finalTime && onResetTimer) {
       const timer = setTimeout(() => {
@@ -42,19 +48,20 @@ export default function TimerComponent({ onResetTimer, onBackPress, skipFinalScr
   const totalSeconds = Math.floor(state.totalMilliseconds / 1000);
 
   const props = {
-    label: 'FREE TIMER',
-    subtitle: state.isPaused ? 'PAUSED' : state.isRunning ? 'RUNNING' : 'READY',
+    label: `Free Timer - Block ${blockIndex + 1}`,
+    subtitle: state.currentRound > 0 ? `Round ${state.currentRound}` : undefined,
     timeString: formatTime(totalSeconds),
     isPaused: state.isPaused,
     onTogglePause: state.isPaused ? actions.startTimer : actions.pauseTimer,
     currentRound: state.currentRound,
     onAddRound: actions.incrementRound,
     onFinish: actions.finishTimer,
+    exercises: block.exercises,
     finalScreen,
-    onBackPress,
   };
 
   return isLandscape 
-    ? <StandaloneLandscape {...props} />
-    : <StandalonePortrait {...props} />;
+    ? <WorkoutLandscape {...props} />
+    : <WorkoutPortrait {...props} />;
 }
+

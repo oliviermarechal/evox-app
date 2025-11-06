@@ -1,8 +1,9 @@
 import React from 'react';
 import { useOrientation } from '@/hooks/useOrientation';
 import { useEMOMTimer } from '@/hooks/emom/useEMOMTimer';
-import StandalonePortrait from '@/components/timers/layouts/StandalonePortrait';
-import StandaloneLandscape from '@/components/timers/layouts/StandaloneLandscape';
+import { WorkoutBlock } from '@/lib/types';
+import WorkoutPortrait from '@/components/timers/layouts/WorkoutPortrait';
+import WorkoutLandscape from '@/components/timers/layouts/WorkoutLandscape';
 import EMOMFinalScreen from '@/components/timers/screens/EMOMFinalScreen';
 
 interface EMOMConfig {
@@ -10,18 +11,24 @@ interface EMOMConfig {
   duration: number;
 }
 
-interface TimerComponentProps {
+interface WorkoutEMOMTimerProps {
   config: EMOMConfig;
+  block: WorkoutBlock;
+  blockIndex: number;
   onResetTimer: () => void;
   skipFinalScreen?: boolean;
 }
 
-export default function TimerComponent({ config, onResetTimer, skipFinalScreen = false }: TimerComponentProps) {
+export default function WorkoutEMOMTimer({ 
+  config, 
+  block, 
+  blockIndex,
+  onResetTimer, 
+  skipFinalScreen = false 
+}: WorkoutEMOMTimerProps) {
   const { isLandscape } = useOrientation();
-
   const state = useEMOMTimer(config);
-
-  // Dans le contexte workout, si finalTime est défini, appeler directement onResetTimer
+  
   React.useEffect(() => {
     if (skipFinalScreen && state.finalTime && onResetTimer) {
       const timer = setTimeout(() => {
@@ -46,19 +53,21 @@ export default function TimerComponent({ config, onResetTimer, skipFinalScreen =
   ) : undefined;
 
   const props = {
-    label: 'EMOM TIMER',
-    subtitle: `Round ${state.currentRound}`,
+    label: `EMOM - Block ${blockIndex + 1}`,
+    subtitle: `Round ${state.currentRound} / ${config.rounds}`,
     timeString: state.formatTime(state.remainingMilliseconds),
     isPaused: state.isPaused,
     onTogglePause: state.isPaused ? state.startTimer : state.pauseTimer,
     currentRound: state.currentRound,
     totalRounds: config.rounds,
-    onAddRound: undefined,
+    onAddRound: undefined, // EMOM n'a pas de bouton add round
     onFinish: state.finishTimer,
+    exercises: block.exercises,
     finalScreen,
   };
 
   return isLandscape 
-    ? <StandaloneLandscape {...props} />
-    : <StandalonePortrait {...props} />;
+    ? <WorkoutLandscape {...props} />
+    : <WorkoutPortrait {...props} />;
 }
+

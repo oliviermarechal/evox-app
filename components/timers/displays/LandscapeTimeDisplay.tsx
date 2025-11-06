@@ -4,16 +4,21 @@ import { View, Text } from 'react-native';
 export function LandscapeTimeDisplay({
   timeString,
   isPaused = false,
+  fontSize = 120,
 }: {
   timeString: string;
   isPaused?: boolean;
+  fontSize?: number;
 }) {
   return (
-    <View>
+    <View style={{ 
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
       <Text
         style={{
           color: '#F5F5DC',
-          fontSize: 120,
+          fontSize: fontSize,
           fontVariant: ['tabular-nums'],
           fontWeight: '300',
           textAlign: 'center',
@@ -21,13 +26,17 @@ export function LandscapeTimeDisplay({
           textShadowOffset: { width: 0, height: 0 },
           textShadowRadius: 30,
           letterSpacing: 2,
-          lineHeight: 124,
+          lineHeight: fontSize + 4,
           fontFamily: 'monospace',
           includeFontPadding: false,
           textAlignVertical: 'center',
-          padding: 20,
-          width: '100%',
+          paddingBottom: 110,
+          paddingTop: 10,
+          paddingHorizontal: 20,
         }}
+        adjustsFontSizeToFit
+        numberOfLines={1}
+        minimumFontScale={0.7}
       >
         {timeString}
       </Text>

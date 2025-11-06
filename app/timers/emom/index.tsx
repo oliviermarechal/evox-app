@@ -86,8 +86,8 @@ export default function EMOMScreen() {
   return (
     <ConfigComponent 
       onStartCountdown={state.handleStartCountdown}
-      initialRounds={roundsParam ? parseInt(roundsParam, 10) : 10}
-      initialDuration={durationParam ? parseInt(durationParam, 10) : 5}
+      initialRounds={roundsParam ? parseInt(roundsParam, 10) : 8}
+      initialDuration={durationParam ? parseInt(durationParam, 10) : 60}
     />
   );
 }
